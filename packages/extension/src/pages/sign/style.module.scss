@@ -16,8 +16,8 @@
       padding-bottom: 8px;
 
       &:global(.active) {
-        border-bottom-color: #5e72e4;
-        color: #5e72e4;
+        border-bottom-color: #00072c;
+        color: #00072c;
       }
     }
   }
@@ -30,7 +30,7 @@
 
 .buttons {
   display: flex;
-  padding-top: 15px;
+  margin-top: 12px;
 }
 
 .button {
@@ -38,14 +38,15 @@
 }
 
 .container {
-  height: 100%;
+  flex: 1;
   display: flex;
   flex-direction: column;
 }
 
 .tab-container {
-  height: 342px;
-  overflow: auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 
   &.data-tab {
     overflow: auto;
@@ -53,6 +54,7 @@
 }
 
 .message {
+  margin-bottom: 0;
   height: 400px;
   font-size: 12px;
   overflow: visible;

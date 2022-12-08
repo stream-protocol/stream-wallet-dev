@@ -1,7 +1,7 @@
 import { AccountSetBase, WalletStatus } from "./base";
 import { ChainStore } from "../chain";
-import { ChainInfo } from "@keplr-wallet/types";
-import { MockKeplr } from "@keplr-wallet/provider-mock";
+import { AppCurrency, ChainInfo } from "@stream-wallet/types";
+import { MockStream } from "@stream-wallet/provider-mock";
 
 describe("Test Account set base", () => {
   test("Account set base should be inited automatically if `autoInit` is true", async () => {
@@ -10,32 +10,31 @@ describe("Test Account set base", () => {
       readonly bech32Config: {
         readonly bech32PrefixAccAddr: string;
       };
+      readonly currencies: AppCurrency[];
     }[] = [
       {
         chainId: "test",
         bech32Config: {
           bech32PrefixAccAddr: "cosmos",
         },
+        currencies: [],
       },
     ];
     const chainStore = new ChainStore(chainInfos as ChainInfo[]);
 
     const accountSetBase = new AccountSetBase(
       {
-        // eslint-disable-next-line @typescript-eslint/no-empty-function
+        // No need
         addEventListener: () => {},
-        // eslint-disable-next-line @typescript-eslint/no-empty-function
         removeEventListener: () => {},
       },
       chainStore,
       "test",
-      undefined as any,
       {
-        prefetching: true,
         suggestChain: false,
         autoInit: true,
-        getKeplr: async () => {
-          return new MockKeplr(
+        getStream: async () => {
+          return new MockStream(
             async () => {
               return new Uint8Array(0);
             },
@@ -43,13 +42,12 @@ describe("Test Account set base", () => {
             "curious kitchen brief change imitate open close knock cause romance trim offer"
           );
         },
-        msgOpts: {},
       }
     );
 
     expect(accountSetBase.walletStatus).toBe(WalletStatus.Loading);
 
-    // Need wait some time to get the Keplr.
+    // Need wait some time to get the Stream.
     await (() => {
       return new Promise<void>((resolve) => {
         setTimeout(resolve, 1000);
@@ -69,32 +67,31 @@ describe("Test Account set base", () => {
       readonly bech32Config: {
         readonly bech32PrefixAccAddr: string;
       };
+      readonly currencies: AppCurrency[];
     }[] = [
       {
         chainId: "test",
         bech32Config: {
           bech32PrefixAccAddr: "cosmos",
         },
+        currencies: [],
       },
     ];
     const chainStore = new ChainStore(chainInfos as ChainInfo[]);
 
     const accountSetBase = new AccountSetBase(
       {
-        // eslint-disable-next-line @typescript-eslint/no-empty-function
+        // No need
         addEventListener: () => {},
-        // eslint-disable-next-line @typescript-eslint/no-empty-function
         removeEventListener: () => {},
       },
       chainStore,
       "test",
-      undefined as any,
       {
-        prefetching: true,
         suggestChain: false,
         autoInit: false,
-        getKeplr: async () => {
-          return new MockKeplr(
+        getStream: async () => {
+          return new MockStream(
             async () => {
               return new Uint8Array(0);
             },
@@ -102,13 +99,12 @@ describe("Test Account set base", () => {
             "curious kitchen brief change imitate open close knock cause romance trim offer"
           );
         },
-        msgOpts: {},
       }
     );
 
     expect(accountSetBase.walletStatus).toBe(WalletStatus.NotInit);
 
-    // Need wait some time to get the Keplr.
+    // Need wait some time to get the Stream.
     await (() => {
       return new Promise<void>((resolve) => {
         setTimeout(resolve, 1000);

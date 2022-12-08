@@ -1,5 +1,5 @@
 import WalletConnect from "@walletconnect/client";
-import { KeyRingStore, PermissionStore } from "@keplr-wallet/stores";
+import { KeyRingStore, PermissionStore } from "@stream-wallet/stores";
 import {
   action,
   autorun,
@@ -9,17 +9,17 @@ import {
   runInAction,
 } from "mobx";
 import { ChainStore } from "../chain";
-import { Keplr } from "@keplr-wallet/provider";
+import { Stream } from "@stream-wallet/provider";
 import { Buffer } from "buffer/";
-import { KVStore } from "@keplr-wallet/common";
+import { KVStore } from "@stream-wallet/common";
 import { WCMessageRequester } from "./msg-requester";
 import { RNRouterBackground } from "../../router";
 import {
   getBasicAccessPermissionType,
   KeyRingStatus,
-} from "@keplr-wallet/background";
+} from "@stream-wallet/background";
 import { computedFn } from "mobx-utils";
-import { Key } from "@keplr-wallet/types";
+import { Key } from "@stream-wallet/types";
 import { AppState, Linking } from "react-native";
 
 export interface WalletConnectV1SessionRequest {
@@ -42,7 +42,7 @@ export interface WalletConnectV1SessionRequest {
 // Wallet connect v1.0 is not suitable for handling multiple chains.
 // When the session requested, you cannot receive information from multiple chains,
 // so open a session unconditionally and manage permissions through custom requests.
-// Frontend should request the "keplr_enable_wallet_connect_V1" method with "chains" params.
+// Frontend should request the "stream-wallet_enable_wallet_connect_V1" method with "chains" params.
 // "chains" params should be in form of https://github.com/ChainAgnostic/CAIPs/blob/master/CAIPs/caip-2.md
 export interface SessionRequestApproval {
   key: string;
@@ -81,10 +81,10 @@ export abstract class WalletConnectManager {
   async restoreClient(session: WalletConnect["session"]) {
     const client = new WalletConnect({
       clientMeta: {
-        name: "Keplr",
+        name: "Stream",
         description: "Wallet for interchain",
         url: "#",
-        icons: ["https://dhj8dql1kzq2v.cloudfront.net/keplr-256x256.png"],
+        icons: ["https://dhj8dql1kzq2v.cloudfront.net/stream-wallet-256x256.png"],
       },
       session,
     });
@@ -163,10 +163,10 @@ export abstract class WalletConnectManager {
     const client = new WalletConnect({
       uri,
       clientMeta: {
-        name: "Keplr",
+        name: "Stream",
         description: "Wallet for interchain",
         url: "#",
-        icons: ["https://dhj8dql1kzq2v.cloudfront.net/keplr-256x256.png"],
+        icons: ["https://dhj8dql1kzq2v.cloudfront.net/stream-wallet-256x256.png"],
       },
     });
 
@@ -245,8 +245,8 @@ export abstract class WalletConnectManager {
     }
   }
 
-  protected createKeplrAPI(sessionId: string) {
-    return new Keplr(
+  protected createStreamAPI(sessionId: string) {
+    return new Stream(
       // TODO: Set version
       "",
       "core",
@@ -272,13 +272,13 @@ export abstract class WalletConnectManager {
 
     await this.waitInitStores();
 
-    const keplr = this.createKeplrAPI(client.session.key);
+    const stream-wallet = this.createStreamAPI(client.session.key);
 
     try {
       this.onCallBeforeRequested(client);
 
       switch (payload.method) {
-        case "keplr_enable_wallet_connect_v1": {
+        case "stream-wallet_enable_wallet_connect_v1": {
           if (payload.params.length === 0) {
             throw new Error("Invalid parmas");
           }
@@ -287,21 +287,21 @@ export abstract class WalletConnectManager {
               throw new Error("Invalid parmas");
             }
           }
-          await keplr.enable(payload.params);
+          await stream-wallet.enable(payload.params);
           client.approveRequest({
             id,
             result: [],
           });
           break;
         }
-        case "keplr_get_key_wallet_connect_v1": {
+        case "stream-wallet_get_key_wallet_connect_v1": {
           if (payload.params.length !== 1) {
             throw new Error("Invalid parmas");
           }
           if (typeof payload.params[0] !== "string") {
             throw new Error("Invalid parmas");
           }
-          const key = await keplr.getKey(payload.params[0]);
+          const key = await stream-wallet.getKey(payload.params[0]);
           client.approveRequest({
             id,
             result: [
@@ -317,12 +317,12 @@ export abstract class WalletConnectManager {
           });
           break;
         }
-        case "keplr_sign_amino_wallet_connect_v1": {
+        case "stream-wallet_sign_amino_wallet_connect_v1": {
           if (payload.params.length !== 3 && payload.params.length !== 4) {
             throw new Error("Invalid parmas");
           }
 
-          const result = await keplr.signAmino(
+          const result = await stream-wallet.signAmino(
             payload.params[0],
             payload.params[1],
             payload.params[2],
@@ -422,16 +422,16 @@ export class WalletConnectStore extends WalletConnectManager {
     this.initDeepLink();
 
     /*
-     Unfortunately, keplr can handle the one key at the same time.
+     Unfortunately, stream-wallet can handle the one key at the same time.
      So, if the other key was selected when the wallet connect connected and the frontend uses that account
-     after the user changes the key on Keplr, the requests can't be handled properly.
-     To reduce this problem, Keplr send the "keplr_keystore_may_changed_event_wallet_connect_v1" to the connected clients
+     after the user changes the key on Stream, the requests can't be handled properly.
+     To reduce this problem, Stream send the "stream-wallet_keystore_may_changed_event_wallet_connect_v1" to the connected clients
      whenever the app is unlocked or user changes the key.
      */
-    this.eventListener.addEventListener("keplr_keystoreunlock", () =>
+    this.eventListener.addEventListener("stream-wallet_keystoreunlock", () =>
       this.sendAccountMayChangedEventToClients()
     );
-    this.eventListener.addEventListener("keplr_keystorechange", () =>
+    this.eventListener.addEventListener("stream-wallet_keystorechange", () =>
       this.sendAccountMayChangedEventToClients()
     );
   }
@@ -480,7 +480,7 @@ export class WalletConnectStore extends WalletConnectManager {
   protected processDeepLinkURL(_url: string) {
     try {
       const url = new URL(_url);
-      if (url.protocol === "keplrwallet:" && url.host === "wcV1") {
+      if (url.protocol === "stream-wallet:" && url.host === "wcV1") {
         let params = url.search;
         if (params) {
           if (params.startsWith("?")) {
@@ -569,7 +569,7 @@ export class WalletConnectStore extends WalletConnectManager {
           }
         | undefined;
 
-      const keplr = this.createKeplrAPI(client.session.key);
+      const stream-wallet = this.createStreamAPI(client.session.key);
 
       const permittedChains = await this.permissionStore.getOriginPermittedChains(
         WCMessageRequester.getVirtualSessionURL(client.session.key),
@@ -577,7 +577,7 @@ export class WalletConnectStore extends WalletConnectManager {
       );
 
       for (const chain of permittedChains) {
-        const key = keyForChainCache[chain] ?? (await keplr.getKey(chain));
+        const key = keyForChainCache[chain] ?? (await stream-wallet.getKey(chain));
         if (!keyForChainCache[chain]) {
           keyForChainCache[chain] = key;
         }
@@ -610,7 +610,7 @@ export class WalletConnectStore extends WalletConnectManager {
         client.sendCustomRequest({
           id: Math.floor(Math.random() * 100000),
           jsonrpc: "2.0",
-          method: "keplr_keystore_may_changed_event_wallet_connect_v1",
+          method: "stream-wallet_keystore_may_changed_event_wallet_connect_v1",
           params: [keys],
         });
       }

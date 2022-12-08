@@ -4,14 +4,17 @@ import styleToken from "./token.module.scss";
 import { observer } from "mobx-react-lite";
 import { useStore } from "../../stores";
 import { useHistory } from "react-router";
-import { Hash } from "@keplr-wallet/crypto";
-import { ObservableQueryBalanceInner } from "@keplr-wallet/stores/build/query/balances";
+import { Hash } from "@stream-wallet/crypto";
+import classmames from "classnames";
 import { UncontrolledTooltip } from "reactstrap";
-import { WrongViewingKeyError } from "@keplr-wallet/stores";
+import {
+  WrongViewingKeyError,
+  ObservableQueryBalanceInner,
+} from "@stream-wallet/stores";
 import { useNotification } from "../../components/notification";
 import { useLoadingIndicator } from "../../components/loading-indicator";
-import sendIcon from "../../public/assets/icon/send.png";
-import { Dec } from "@keplr-wallet/unit";
+import { DenomHelper } from "@stream-wallet/common";
+import { Dec } from "@stream-wallet/unit";
 
 const TokenView: FunctionComponent<{
   balance: ObservableQueryBalanceInner;
@@ -20,8 +23,8 @@ const TokenView: FunctionComponent<{
   const { chainStore, accountStore, tokensStore } = useStore();
 
   const [backgroundColors] = useState([
-    "#5e72e4",
-    "#11cdef",
+    "#00072c",
+    "#051150",
     "#2dce89",
     "#fb6340",
   ]);
@@ -29,7 +32,6 @@ const TokenView: FunctionComponent<{
   const name = balance.currency.coinDenom.toUpperCase();
   const minimalDenom = balance.currency.coinMinimalDenom;
   let amount = balance.balance.trim(true).shrink(true);
-  const isZeroBal = balance.balance.toDec().equals(new Dec(0));
 
   const backgroundColor = useMemo(() => {
     const hash = Hash.sha256(Buffer.from(minimalDenom));
@@ -67,13 +69,13 @@ const TokenView: FunctionComponent<{
             {},
             {},
             (_, viewingKey) => {
-              loadingIndicator.setIsLoading("create-veiwing-key", false);
+              loadingIndicator.setIsLoading("create-viewing-key", false);
 
               resolve(viewingKey);
             }
           )
           .then(() => {
-            loadingIndicator.setIsLoading("create-veiwing-key", true);
+            loadingIndicator.setIsLoading("create-viewing-key", true);
           });
       });
     }
@@ -87,8 +89,15 @@ const TokenView: FunctionComponent<{
   }
 
   return (
-    <div className={styleToken.tokenContainer}>
-      <div className={styleToken.tokenImg}>
+    <div
+      className={styleToken.tokenContainer}
+      onClick={(e) => {
+        e.preventDefault();
+
+        onClick();
+      }}
+    >
+      <div className={styleToken.icon}>
         <div
           style={{
             width: "100%",
@@ -107,85 +116,81 @@ const TokenView: FunctionComponent<{
           {name.length > 0 ? name[0] : "?"}
         </div>
       </div>
-      <div className={styleToken.tokenName}>{name}</div>
-      <div className={styleToken.tokenBalance}>
-        {balance.isFetching ? (
-          <i className="fas fa-spinner fa-spin ml-1" />
-        ) : (
-          amount.maxDecimals(6).hideDenom(true).toString()
-        )}
-      </div>
-      {error ? (
-        <div style={{ paddingRight: "10px" }}>
-          <i
-            className="fas fa-exclamation-circle text-danger"
-            id={validSelector}
-          />
-          <UncontrolledTooltip target={validSelector}>
-            {error.message}
-          </UncontrolledTooltip>
+      <div className={styleToken.innerContainer}>
+        <div className={styleToken.content}>
+          <div className={styleToken.name}>{name}</div>
+          <div className={styleToken.amount}>
+            {amount.maxDecimals(6).toString()}
+            {balance.isFetching ? (
+              <i className="fas fa-spinner fa-spin ml-1" />
+            ) : null}
+          </div>
         </div>
-      ) : null}
-      {error?.data && error.data instanceof WrongViewingKeyError ? (
-        <div
-          style={{ paddingRight: "10px" }}
-          onClick={async (e) => {
-            e.preventDefault();
-            e.stopPropagation();
+        <div style={{ flex: 1 }} />
+        {error ? (
+          <div className={classmames(styleToken.rightIcon, "mr-2")}>
+            <i
+              className="fas fa-exclamation-circle text-danger"
+              id={validSelector}
+            />
+            <UncontrolledTooltip target={validSelector}>
+              {error.message}
+            </UncontrolledTooltip>
+          </div>
+        ) : null}
+        {error?.data && error.data instanceof WrongViewingKeyError ? (
+          <div
+            className={classmames(styleToken.rightIcon, "mr-2")}
+            onClick={async (e) => {
+              e.preventDefault();
+              e.stopPropagation();
 
-            if (
-              "type" in balance.currency &&
-              balance.currency.type === "secret20"
-            ) {
-              const viewingKey = await createViewingKey();
-              if (!viewingKey) {
-                notification.push({
-                  placement: "top-center",
-                  type: "danger",
-                  duration: 2,
-                  content: "Failed to create the viewing key",
-                  canDelete: true,
-                  transition: {
-                    duration: 0.25,
-                  },
+              if (
+                "type" in balance.currency &&
+                balance.currency.type === "secret20"
+              ) {
+                const viewingKey = await createViewingKey();
+                if (!viewingKey) {
+                  notification.push({
+                    placement: "top-center",
+                    type: "danger",
+                    duration: 2,
+                    content: "Failed to create the viewing key",
+                    canDelete: true,
+                    transition: {
+                      duration: 0.25,
+                    },
+                  });
+
+                  return;
+                }
+
+                const tokenOf = tokensStore.getTokensOf(
+                  chainStore.current.chainId
+                );
+
+                await tokenOf.addToken({
+                  ...balance.currency,
+                  viewingKey,
                 });
 
-                return;
+                history.push({
+                  pathname: "/",
+                });
               }
-
-              const tokenOf = tokensStore.getTokensOf(
-                chainStore.current.chainId
-              );
-
-              await tokenOf.addToken({
-                ...balance.currency,
-                viewingKey,
-              });
-
-              history.push({
-                pathname: "/",
-              });
-            }
-          }}
-        >
-          {accountInfo.isSendingMsg === "createSecret20ViewingKey" ? (
-            <i className="fa fa-spinner fa-spin fa-fw" />
-          ) : (
-            <i className="fas fa-wrench" />
-          )}
+            }}
+          >
+            {accountInfo.isSendingMsg === "createSecret20ViewingKey" ? (
+              <i className="fa fa-spinner fa-spin fa-fw" />
+            ) : (
+              <i className="fas fa-wrench" />
+            )}
+          </div>
+        ) : null}
+        <div className={styleToken.rightIcon}>
+          <i className="fas fa-angle-right" />
         </div>
-      ) : null}
-      <img
-        onClick={(e) => {
-          if (!isZeroBal) {
-            e.preventDefault();
-            onClick();
-          }
-        }}
-        src={sendIcon}
-        style={!isZeroBal ? { cursor: "pointer" } : { opacity: 0.5 }}
-        alt="send"
-      />
+      </div>
     </div>
   );
 });
@@ -198,7 +203,15 @@ export const TokensView: FunctionComponent = observer(() => {
   const tokens = queriesStore
     .get(chainStore.current.chainId)
     .queryBalances.getQueryBech32Address(accountInfo.bech32Address)
-    .unstakables.sort((a, b) => {
+    .unstakables.filter((bal) => {
+      // Temporary implementation for trimming the 0 balanced native tokens.
+      // TODO: Remove this part.
+      if (new DenomHelper(bal.currency.coinMinimalDenom).type === "native") {
+        return bal.balance.toDec().gt(new Dec("0"));
+      }
+      return true;
+    })
+    .sort((a, b) => {
       const aDecIsZero = a.balance.toDec().isZero();
       const bDecIsZero = b.balance.toDec().isZero();
 
@@ -215,24 +228,22 @@ export const TokensView: FunctionComponent = observer(() => {
   const history = useHistory();
 
   return (
-    <div>
-      <div className={styleToken.tokenTitle}>Tokens</div>
-      <div className={styleToken.tokenContainnerInner}>
-        {tokens.map((token, i) => {
-          return (
-            <TokenView
-              key={i.toString()}
-              balance={token}
-              onClick={() => {
-                history.push({
-                  pathname: "/send",
-                  search: `?defaultDenom=${token.currency.coinMinimalDenom}`,
-                });
-              }}
-            />
-          );
-        })}
-      </div>
+    <div className={styleToken.tokensContainer}>
+      <h1 className={styleToken.title}>Tokens</h1>
+      {tokens.map((token, i) => {
+        return (
+          <TokenView
+            key={i.toString()}
+            balance={token}
+            onClick={() => {
+              history.push({
+                pathname: "/send",
+                search: `?defaultDenom=${token.currency.coinMinimalDenom}`,
+              });
+            }}
+          />
+        );
+      })}
     </div>
   );
 });

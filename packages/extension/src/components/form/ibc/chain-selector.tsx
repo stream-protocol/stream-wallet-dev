@@ -12,7 +12,7 @@ import style from "./style.module.scss";
 import { IBCChannelRegistrarModal } from "./channel-registrar";
 import { observer } from "mobx-react-lite";
 import { useStore } from "../../../stores";
-import { IIBCChannelConfig } from "@keplr-wallet/hooks";
+import { IIBCChannelConfig } from "@stream-wallet/hooks";
 import { FormattedMessage } from "react-intl";
 
 export const DestinationChainSelector: FunctionComponent<{

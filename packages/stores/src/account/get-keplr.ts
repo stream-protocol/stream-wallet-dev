@@ -1,14 +1,18 @@
-import { Keplr } from "@keplr-wallet/types";
+import { Stream } from "@stream-wallet/types";
 
-export const getKeplrFromWindow: () => Promise<
-  Keplr | undefined
+export const getStreamFromWindow: () => Promise<
+  Stream | undefined
 > = async () => {
-  if (window.keplr) {
-    return window.keplr;
+  if (typeof window === "undefined") {
+    return undefined;
+  }
+
+  if (window.stream-wallet) {
+    return window.stream-wallet;
   }
 
   if (document.readyState === "complete") {
-    return window.keplr;
+    return window.stream-wallet;
   }
 
   return new Promise((resolve) => {
@@ -17,7 +21,7 @@ export const getKeplrFromWindow: () => Promise<
         event.target &&
         (event.target as Document).readyState === "complete"
       ) {
-        resolve(window.keplr);
+        resolve(window.stream-wallet);
         document.removeEventListener("readystatechange", documentStateChange);
       }
     };

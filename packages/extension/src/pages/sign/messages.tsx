@@ -1,18 +1,24 @@
 /* eslint-disable react/display-name */
 
 import React, { FunctionComponent, useEffect, useMemo, useState } from "react";
-import { Bech32Address } from "@keplr-wallet/cosmos";
-import { CoinUtils, Coin } from "@keplr-wallet/unit";
+import { Bech32Address } from "@stream-wallet/cosmos";
+import { CoinUtils, Coin } from "@stream-wallet/unit";
 import { IntlShape, FormattedMessage, useIntl } from "react-intl";
-import { Currency } from "@keplr-wallet/types";
+import { Currency } from "@stream-wallet/types";
 import { Button, Badge } from "reactstrap";
 import { observer } from "mobx-react-lite";
 import { useStore } from "../../stores";
 import yaml from "js-yaml";
 
 import { Buffer } from "buffer/";
-import { CoinPrimitive } from "@keplr-wallet/stores";
-import { clearDecimals } from "./decimals";
+import { CoinPrimitive } from "@stream-wallet/stores";
+import { Any } from "@stream-wallet/proto-types/google/protobuf/any";
+import { Grant } from "@stream-wallet/proto-types/cosmos/authz/v1beta1/authz";
+import {
+  AuthorizationType,
+  StakeAuthorization,
+} from "@stream-wallet/proto-types/cosmos/staking/v1beta1/authz";
+import { SendAuthorization } from "@stream-wallet/proto-types/cosmos/bank/v1beta1/authz";
 
 export interface MessageObj {
   readonly type: string;
@@ -514,6 +520,171 @@ export function renderMsgExecuteContract(
   };
 }
 
+export function renderGenericMsgGrant(
+  intl: IntlShape,
+  granteeAddress: string,
+  expiration: Grant["expiration"],
+  grantTypeUrl: Any["typeUrl"]
+) {
+  return {
+    icon: "fas fa-key",
+    title: intl.formatMessage({
+      id: "sign.list.message.cosmos-sdk/MsgGrant.title",
+    }),
+    content: (
+      <FormattedMessage
+        id="sign.list.message.cosmos-sdk/MsgGrant.generic.content"
+        values={{
+          b: (...chunks: any[]) => <b>{chunks}</b>,
+          grantee: Bech32Address.shortenAddress(granteeAddress, 24),
+          grantType: grantTypeUrl
+            ? grantTypeUrl.split(".").slice(-1)[0]
+            : intl.formatMessage({
+                id: "sign.list.message.cosmos-sdk/MsgGrant.unspecified",
+              }),
+          expirationDate: intl.formatDate(expiration),
+        }}
+      />
+    ),
+  };
+}
+
+const stakingGrantTypes: Record<AuthorizationType, string> = {
+  [AuthorizationType.AUTHORIZATION_TYPE_DELEGATE]:
+    "sign.list.message.cosmos-sdk/MsgDelegate.title",
+  [AuthorizationType.AUTHORIZATION_TYPE_REDELEGATE]:
+    "sign.list.message.cosmos-sdk/MsgBeginRedelegate.title",
+  [AuthorizationType.AUTHORIZATION_TYPE_UNDELEGATE]:
+    "sign.list.message.cosmos-sdk/MsgUndelegate.title",
+  [AuthorizationType.AUTHORIZATION_TYPE_UNSPECIFIED]:
+    "sign.list.message.cosmos-sdk/MsgGrant.unspecified",
+  [AuthorizationType.UNRECOGNIZED]:
+    "sign.list.message.cosmos-sdk/MsgGrant.unrecognized",
+};
+
+export function renderStakeMsgGrant(
+  currencies: Currency[],
+  intl: IntlShape,
+  grantee: string,
+  expiration: Grant["expiration"],
+  stakingSettings: StakeAuthorization
+) {
+  const parsedMaxAmount =
+    stakingSettings.maxTokens &&
+    CoinUtils.parseDecAndDenomFromCoin(
+      currencies,
+      new Coin(
+        stakingSettings.maxTokens.denom,
+        stakingSettings.maxTokens.amount
+      )
+    );
+
+  return {
+    icon: "fas fa-key",
+    title: intl.formatMessage({
+      id: "sign.list.message.cosmos-sdk/MsgGrant.title",
+    }),
+    content: (
+      <FormattedMessage
+        id="sign.list.message.cosmos-sdk/MsgGrant.staking.content"
+        values={{
+          b: (...chunks: any[]) => <b>{chunks}</b>,
+          br: <br />,
+          grantee: Bech32Address.shortenAddress(grantee, 24),
+          grantType: intl.formatMessage({
+            id: stakingGrantTypes[stakingSettings.authorizationType],
+          }),
+          expirationDate: intl.formatDate(expiration),
+          validatorListType: intl.formatMessage({
+            id: stakingSettings.allowList?.address.length
+              ? "sign.list.message.cosmos-sdk/MsgGrant.staking.validatorAllowedLabel"
+              : "sign.list.message.cosmos-sdk/MsgGrant.staking.validatorDeniedLabel",
+          }),
+          validators: intl.formatList(
+            (
+              stakingSettings.allowList?.address ||
+              stakingSettings.denyList?.address ||
+              []
+            ).map((valAddress) => Bech32Address.shortenAddress(valAddress, 24))
+          ),
+          maxAmount: parsedMaxAmount
+            ? `${clearDecimals(parsedMaxAmount.amount)} ${
+                parsedMaxAmount.denom
+              }`
+            : intl.formatMessage({
+                id: "sign.list.message.cosmos-sdk/MsgGrant.unlimited",
+              }),
+        }}
+      />
+    ),
+  };
+}
+
+export function renderSendMsgGrant(
+  currencies: Currency[],
+  intl: IntlShape,
+  granteeAddress: string,
+  expiration: Grant["expiration"],
+  sendSettings: SendAuthorization
+) {
+  const maxAmount =
+    intl.formatList(
+      sendSettings.spendLimit
+        ?.map((amount) =>
+          CoinUtils.parseDecAndDenomFromCoin(
+            currencies,
+            new Coin(amount.denom, amount.amount)
+          )
+        )
+        ?.map((coin) => `${clearDecimals(coin.amount)} ${coin.denom}`)
+    ) ||
+    intl.formatMessage({
+      id: "sign.list.message.cosmos-sdk/MsgGrant.unlimited",
+    });
+
+  return {
+    icon: "fas fa-key",
+    title: intl.formatMessage({
+      id: "sign.list.message.cosmos-sdk/MsgGrant.title",
+    }),
+    content: (
+      <FormattedMessage
+        id="sign.list.message.cosmos-sdk/MsgGrant.sending.content"
+        values={{
+          b: (...chunks: any[]) => <b>{chunks}</b>,
+          br: <br />,
+          grantee: Bech32Address.shortenAddress(granteeAddress, 24),
+          maxAmount,
+          expirationDate: intl.formatDate(expiration),
+        }}
+      />
+    ),
+  };
+}
+
+export function renderMsgRevoke(
+  intl: IntlShape,
+  revokeType: string,
+  granteeAddress: string
+) {
+  return {
+    icon: "fas fa-lock",
+    title: intl.formatMessage({
+      id: "sign.list.message.cosmos-sdk/MsgRevoke.title",
+    }),
+    content: (
+      <FormattedMessage
+        id="sign.list.message.cosmos-sdk/MsgRevoke.content"
+        values={{
+          b: (...chunks: any[]) => <b>{chunks}</b>,
+          revokeType: revokeType.split(".").slice(-1)[0],
+          grantee: Bech32Address.shortenAddress(granteeAddress, 24),
+        }}
+      />
+    ),
+  };
+}
+
 export const WasmExecutionMsgView: FunctionComponent<{
   // eslint-disable-next-line @typescript-eslint/ban-types
   msg: object | string;
@@ -533,8 +704,8 @@ export const WasmExecutionMsgView: FunctionComponent<{
   useEffect(() => {
     // If msg is string, it will be the message for secret-wasm.
     // So, try to decrypt.
-    // But, if this msg is not encrypted via Keplr, Keplr cannot decrypt it.
-    // TODO: Handle the error case. If an error occurs, rather than rejecting the signing, it informs the user that Kepler cannot decrypt it and allows the user to choose.
+    // But, if this msg is not encrypted via Stream, Stream cannot decrypt it.
+    // TODO: Handle the error case. If an error occurs, rather than rejecting the signing, it informs the user that Stream cannot decrypt it and allows the user to choose.
     if (typeof msg === "string") {
       (async () => {
         try {
@@ -543,14 +714,14 @@ export const WasmExecutionMsgView: FunctionComponent<{
           const nonce = cipherText.slice(0, 32);
           cipherText = cipherText.slice(64);
 
-          const keplr = await accountStore
+          const stream-wallet = await accountStore
             .getAccount(chainStore.current.chainId)
-            .getKeplr();
-          if (!keplr) {
-            throw new Error("Can't get the keplr API");
+            .getStream();
+          if (!stream-wallet) {
+            throw new Error("Can't get the stream-wallet API");
           }
 
-          const enigmaUtils = keplr.getEnigmaUtils(chainStore.current.chainId);
+          const enigmaUtils = stream-wallet.getEnigmaUtils(chainStore.current.chainId);
           let plainText = Buffer.from(
             await enigmaUtils.decrypt(cipherText, nonce)
           );
@@ -571,7 +742,7 @@ export const WasmExecutionMsgView: FunctionComponent<{
         }
       })();
     }
-  }, [accountStore, chainStore, chainStore.current.chainId, intl, msg]);
+  }, [chainStore, chainStore.current.chainId, intl, msg]);
 
   return (
     <div>
@@ -620,3 +791,22 @@ export const UnknownMsgView: FunctionComponent<{ msg: object }> = ({ msg }) => {
     </div>
   );
 };
+
+export function clearDecimals(dec: string): string {
+  if (!dec.includes(".")) {
+    return dec;
+  }
+
+  for (let i = dec.length - 1; i >= 0; i--) {
+    if (dec[i] === "0") {
+      dec = dec.slice(0, dec.length - 1);
+    } else {
+      break;
+    }
+  }
+  if (dec.length > 0 && dec[dec.length - 1] === ".") {
+    dec = dec.slice(0, dec.length - 1);
+  }
+
+  return dec;
+}

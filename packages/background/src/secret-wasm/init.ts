@@ -1,4 +1,4 @@
-import { Router } from "@keplr-wallet/router";
+import { Router } from "@stream-wallet/router";
 import {
   GetPubkeyMsg,
   GetTxEncryptionKeyMsg,

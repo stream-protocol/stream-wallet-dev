@@ -3,7 +3,6 @@ import React, { FunctionComponent } from "react";
 import classnames from "classnames";
 
 import stylePageButton from "./page-button.module.scss";
-import { ToolTip } from "../../components/tooltip";
 
 export const PageButton: FunctionComponent<
   {
@@ -28,16 +27,7 @@ export const PageButton: FunctionComponent<
       {...attributes}
     >
       <div className={stylePageButton.innerContainer}>
-        <ToolTip
-          tooltip={title}
-          theme="dark"
-          trigger="hover"
-          options={{
-            placement: "top",
-          }}
-        >
-          <h1>{title}</h1>
-        </ToolTip>
+        <h1>{title}</h1>
         {paragraph ? <p>{paragraph}</p> : null}
         {subParagraph ? <p>{subParagraph}</p> : null}
       </div>

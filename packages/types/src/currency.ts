@@ -16,7 +16,7 @@ export interface Currency {
 /**
  * The currency that is supported on the cosmwasm.
  * This should be the CW-20 that confirms the standard.
- * And, in this case, `coinMinimalDenom` must start with the type and contract address of currency such as "cw20:coral1vv6hruqu...3sfhwh:ukeplr".
+ * And, in this case, `coinMinimalDenom` must start with the type and contract address of currency such as "cw20:coral1vv6hruqu...3sfhwh:ustream-wallet".
  */
 export interface CW20Currency extends Currency {
   readonly type: "cw20";
@@ -66,3 +66,17 @@ export interface FiatCurrency {
   readonly maxDecimals: number;
   readonly locale: string;
 }
+
+export type WithGasPriceStep<T> = T & {
+  /**
+   * This is used to set the fee of the transaction.
+   * If this field is empty, it just use the default gas price step (low: 0.01, average: 0.025, high: 0.04).
+   */
+  readonly gasPriceStep?: {
+    readonly low: number;
+    readonly average: number;
+    readonly high: number;
+  };
+};
+
+export type FeeCurrency = WithGasPriceStep<AppCurrency>;

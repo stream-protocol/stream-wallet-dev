@@ -4,11 +4,13 @@ import { Address } from "../../components/address";
 
 import styleAccount from "./account.module.scss";
 
-import { WalletStatus } from "@keplr-wallet/stores";
 import { observer } from "mobx-react-lite";
-import { useIntl } from "react-intl";
-import { useNotification } from "../../components/notification";
 import { useStore } from "../../stores";
+import { useNotification } from "../../components/notification";
+import { ToolTip } from "../../components/tooltip";
+import { useIntl } from "react-intl";
+import { WalletStatus } from "@stream-wallet/stores";
+import { StreamError } from "@stream-wallet/router";
 
 export const AccountView: FunctionComponent = observer(() => {
   const { accountStore, chainStore } = useStore();
@@ -49,30 +51,61 @@ export const AccountView: FunctionComponent = observer(() => {
               intl.formatMessage({
                 id: "setting.keyring.unnamed-account",
               })
+            : accountInfo.walletStatus === WalletStatus.Rejected
+            ? "Unable to Load Key"
             : "Loading..."}
         </div>
         <div style={{ flex: 1 }} />
       </div>
-      <div className={styleAccount.containerAccount}>
-        <div style={{ flex: 1 }} />
-        <div
-          className={styleAccount.address}
-          onClick={() => copyAddress(accountInfo.bech32Address)}
+      {accountInfo.walletStatus === WalletStatus.Rejected && (
+        <ToolTip
+          tooltip={(() => {
+            if (
+              accountInfo.rejectionReason &&
+              accountInfo.rejectionReason instanceof StreamError &&
+              accountInfo.rejectionReason.module === "keyring" &&
+              accountInfo.rejectionReason.code === 152
+            ) {
+              // Return unsupported device message
+              return "Ledger is not supported for this chain";
+            }
+
+            let result = "Failed to load account by unknown reason";
+            if (accountInfo.rejectionReason) {
+              result += `: ${accountInfo.rejectionReason.toString()}`;
+            }
+
+            return result;
+          })()}
+          theme="dark"
+          trigger="hover"
+          options={{
+            placement: "top",
+          }}
         >
-          <Address
-            maxCharacters={22}
-            lineBreakBeforePrefix={false}
-            iconClass="fas fa-copy"
+          <i
+            className={`fas fa-exclamation-triangle text-danger ${styleAccount.unsupportedKeyIcon}`}
+          />
+        </ToolTip>
+      )}
+      {accountInfo.walletStatus !== WalletStatus.Rejected && (
+        <div className={styleAccount.containerAccount}>
+          <div style={{ flex: 1 }} />
+          <div
+            className={styleAccount.address}
+            onClick={() => copyAddress(accountInfo.bech32Address)}
           >
-            {accountInfo.walletStatus === WalletStatus.Loaded &&
-            accountInfo.bech32Address
-              ? accountInfo.bech32Address
-              : "..."}
-          </Address>
+            <Address maxCharacters={22} lineBreakBeforePrefix={false}>
+              {accountInfo.walletStatus === WalletStatus.Loaded &&
+              accountInfo.bech32Address
+                ? accountInfo.bech32Address
+                : "..."}
+            </Address>
+          </div>
+          <div style={{ flex: 1 }} />
         </div>
-        <div style={{ flex: 1 }} />
-      </div>
-      {accountInfo.hasEvmosHexAddress && (
+      )}
+      {accountInfo.hasEthereumHexAddress && (
         <div
           className={styleAccount.containerAccount}
           style={{ marginTop: "2px" }}
@@ -80,12 +113,20 @@ export const AccountView: FunctionComponent = observer(() => {
           <div style={{ flex: 1 }} />
           <div
             className={styleAccount.address}
-            onClick={() => copyAddress(accountInfo.evmosHexAddress)}
+            onClick={() => copyAddress(accountInfo.ethereumHexAddress)}
           >
-            <Address maxCharacters={22} lineBreakBeforePrefix={false}>
+            <Address
+              isRaw={true}
+              tooltipAddress={accountInfo.ethereumHexAddress}
+            >
               {accountInfo.walletStatus === WalletStatus.Loaded &&
-              accountInfo.evmosHexAddress
-                ? accountInfo.evmosHexAddress
+              accountInfo.ethereumHexAddress
+                ? accountInfo.ethereumHexAddress.length === 42
+                  ? `${accountInfo.ethereumHexAddress.slice(
+                      0,
+                      10
+                    )}...${accountInfo.ethereumHexAddress.slice(-8)}`
+                  : accountInfo.ethereumHexAddress
                 : "..."}
             </Address>
           </div>

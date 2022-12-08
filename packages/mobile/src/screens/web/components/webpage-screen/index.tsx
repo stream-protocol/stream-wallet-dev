@@ -8,9 +8,9 @@ import React, {
 import { BackHandler, Platform } from "react-native";
 import WebView, { WebViewMessageEvent } from "react-native-webview";
 import { useStyle } from "../../../../styles";
-import { Keplr } from "@keplr-wallet/provider";
+import { Stream } from "@stream-wallet/provider";
 import { RNMessageRequesterExternal } from "../../../../router";
-import { RNInjectedKeplr } from "../../../../injected/injected-provider";
+import { RNInjectedStream } from "../../../../injected/injected-provider";
 import RNFS from "react-native-fs";
 import EventEmitter from "eventemitter3";
 import { PageWithViewInBottomTabView } from "../../../../components/page";
@@ -20,6 +20,49 @@ import { WebViewStateContext } from "../context";
 import { URL } from "react-native-url-polyfill";
 import { observer } from "mobx-react-lite";
 import { useStore } from "../../../../stores";
+import { AppCurrency, ChainInfo, StreamMode } from "@stream-wallet/types";
+import { MessageRequester } from "@stream-wallet/router";
+import { autorun } from "mobx";
+import { Mutable } from "utility-types";
+
+// Due to the limitations of the current structure, it is not possible to approve the suggest chain and immediately reflect the updated chain infos.
+// Since chain infos cannot be reflected immediately, a problem may occur if a request comes in during that delay.
+// To solve this problem, logic is needed to wait until new chain infos are reflected after the suggest chain.
+// It's not an graceful solution. However, since it is a structural problem, we choose a solution that can solve it right away.
+// TODO: Solve this problem by structural way and remove the class below.
+class SuggestChainReceiverStream extends Stream {
+  constructor(
+    version: string,
+    mode: StreamMode,
+    requester: MessageRequester,
+    protected readonly suggestChainReceiver: (
+      chainInfo: ChainInfo
+    ) => Promise<void> | void
+  ) {
+    super(version, mode, requester);
+  }
+
+  async experimentalSuggestChain(chainInfo: ChainInfo): Promise<void> {
+    // deep copy
+    const mutableChainInfo = JSON.parse(
+      JSON.stringify(chainInfo)
+    ) as Mutable<ChainInfo>;
+
+    mutableChainInfo.currencies = mutableChainInfo.currencies.map((cur) => {
+      const mutableCur = cur as Mutable<AppCurrency>;
+      // Although the coinImageUrl field exists in currency, displaying an icon through it is not yet standardized enough.
+      // And even in dApps themselves, there are many cases where this field is set incorrectly because it is not yet used by the app itself.
+      // For this reason, disable it for a moment.
+      // coinGeckoId is also disabled because it is often set incorrectly in dApp.
+      delete mutableCur.coinImageUrl;
+      delete mutableCur.coinGeckoId;
+      return mutableCur;
+    });
+
+    await super.experimentalSuggestChain(mutableChainInfo);
+    await this.suggestChainReceiver(mutableChainInfo);
+  }
+}
 
 export const useInjectedSourceCode = () => {
   const [code, setCode] = useState<string | undefined>();
@@ -42,9 +85,12 @@ export const useInjectedSourceCode = () => {
 export const WebpageScreen: FunctionComponent<
   React.ComponentProps<typeof WebView> & {
     name: string;
+    experimentalOptions?: Partial<{
+      enableSuggestChain: boolean;
+    }>;
   }
 > = observer((props) => {
-  const { keyRingStore } = useStore();
+  const { chainStore, chainSuggestStore, keyRingStore } = useStore();
 
   const style = useStyle();
 
@@ -57,11 +103,32 @@ export const WebpageScreen: FunctionComponent<
     return "";
   });
 
+  // XXX: Support for suggest chains experimentally.
+  //      However, due to structural problems, it will not work properly if multiple `WebpageScreen` components exist at the same time.
+  //      However, due to the current UI design, multiple `WebpageScreen` components cannot exist at the same time.
+  //      Therefore, for now, we will postpone the solution of this issue.
+  const waitingSuggestedChainInfo = chainSuggestStore.waitingSuggestedChainInfo;
+  const enableSuggestChain = !!props.experimentalOptions?.enableSuggestChain;
+  useEffect(() => {
+    if (waitingSuggestedChainInfo) {
+      if (enableSuggestChain) {
+        chainSuggestStore.approve({
+          ...waitingSuggestedChainInfo.data.chainInfo,
+          // In mobile, the suggest chain function is experimental and it is unclear what will happen in the future.
+          // For now, disable the option below.
+          updateFromRepoDisabled: true,
+        });
+      } else {
+        chainSuggestStore.reject();
+      }
+    }
+  }, [chainSuggestStore, enableSuggestChain, waitingSuggestedChainInfo]);
+
   // TODO: Set the version properly.
-  const [keplr] = useState(
+  const [stream-wallet] = useState(
     () =>
-      new Keplr(
-        "0.0.1",
+      new SuggestChainReceiverStream(
+        "0.10.10",
         "core",
         new RNMessageRequesterExternal(() => {
           if (!webviewRef.current) {
@@ -76,7 +143,27 @@ export const WebpageScreen: FunctionComponent<
             url: currentURL,
             origin: new URL(currentURL).origin,
           };
-        })
+        }),
+        // Check the comments on `SuggestChainReceiverStream`
+        async (chainInfo) => {
+          if (chainStore.hasChain(chainInfo.chainId)) {
+            return;
+          }
+
+          return new Promise<void>((resolve) => {
+            const disposer = autorun(() => {
+              if (chainStore.hasChain(chainInfo.chainId)) {
+                resolve();
+
+                if (disposer) {
+                  disposer();
+                }
+              } else {
+                chainStore.getChainInfosFromBackground();
+              }
+            });
+          });
+        }
       )
   );
 
@@ -89,8 +176,8 @@ export const WebpageScreen: FunctionComponent<
   );
 
   useEffect(() => {
-    RNInjectedKeplr.startProxy(
-      keplr,
+    RNInjectedStream.startProxy(
+      stream-wallet,
       {
         addMessageListener: (fn) => {
           eventEmitter.addListener("message", fn);
@@ -106,15 +193,15 @@ export const WebpageScreen: FunctionComponent<
           );
         },
       },
-      RNInjectedKeplr.parseWebviewMessage
+      RNInjectedStream.parseWebviewMessage
     );
-  }, [eventEmitter, keplr]);
+  }, [eventEmitter, stream-wallet]);
 
   useEffect(() => {
     const keyStoreChangedListener = () => {
       webviewRef.current?.injectJavaScript(
         `
-            window.dispatchEvent(new Event("keplr_keystorechange"));
+            window.dispatchEvent(new Event("stream-wallet_keystorechange"));
             true; // note: this is required, or you'll sometimes get silent failures
           `
       );
@@ -171,12 +258,17 @@ export const WebpageScreen: FunctionComponent<
 
   const sourceCode = useInjectedSourceCode();
 
+  const { name, forceDarkOn, ...restProps } = props;
+
   return (
-    <PageWithViewInBottomTabView style={style.flatten(["padding-0"])}>
+    <PageWithViewInBottomTabView
+      backgroundMode={null}
+      style={style.flatten(["padding-0"])}
+    >
       <WebViewStateContext.Provider
         value={{
           webView: webviewRef.current,
-          name: props.name,
+          name: name,
           url: currentURL,
           canGoBack,
           canGoForward,
@@ -187,6 +279,10 @@ export const WebpageScreen: FunctionComponent<
       {sourceCode ? (
         <WebView
           ref={webviewRef}
+          style={style.flatten([
+            "background-color-white",
+            "dark:background-color-black",
+          ])}
           injectedJavaScriptBeforeContentLoaded={sourceCode}
           onMessage={onMessage}
           onNavigationStateChange={(e) => {
@@ -209,7 +305,13 @@ export const WebpageScreen: FunctionComponent<
           automaticallyAdjustContentInsets={false}
           decelerationRate="normal"
           allowsBackForwardNavigationGestures={true}
-          {...props}
+          forceDarkOn={(() => {
+            if (Platform.OS === "android") {
+              return style.theme === "dark" || forceDarkOn;
+            }
+            return forceDarkOn;
+          })()}
+          {...restProps}
         />
       ) : null}
     </PageWithViewInBottomTabView>

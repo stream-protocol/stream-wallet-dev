@@ -1,7 +1,7 @@
-import { InjectedKeplr } from "@keplr-wallet/provider";
-import { KeplrMode } from "@keplr-wallet/types";
+import { InjectedStream } from "@stream-wallet/provider";
+import { StreamMode } from "@stream-wallet/types";
 
-export class RNInjectedKeplr extends InjectedKeplr {
+export class RNInjectedStream extends InjectedStream {
   static parseWebviewMessage(message: any): any {
     if (message && typeof message === "string") {
       try {
@@ -14,7 +14,7 @@ export class RNInjectedKeplr extends InjectedKeplr {
     return message;
   }
 
-  constructor(version: string, mode: KeplrMode) {
+  constructor(version: string, mode: StreamMode) {
     super(
       version,
       mode,
@@ -29,7 +29,7 @@ export class RNInjectedKeplr extends InjectedKeplr {
           window.ReactNativeWebView.postMessage(JSON.stringify(message));
         },
       },
-      RNInjectedKeplr.parseWebviewMessage
+      RNInjectedStream.parseWebviewMessage
     );
   }
 }

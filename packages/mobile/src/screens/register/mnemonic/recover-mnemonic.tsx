@@ -2,7 +2,7 @@ import React, { FunctionComponent, useState } from "react";
 import { PageWithScrollView } from "../../../components/page";
 import { observer } from "mobx-react-lite";
 import { RouteProp, useRoute } from "@react-navigation/native";
-import { RegisterConfig } from "@keplr-wallet/hooks";
+import { RegisterConfig } from "@stream-wallet/hooks";
 import { useStyle } from "../../../styles";
 import { useSmartNavigation } from "../../../navigation";
 import { Controller, useForm } from "react-hook-form";
@@ -127,6 +127,7 @@ export const RecoverMnemonicScreen: FunctionComponent = observer(() => {
 
   return (
     <PageWithScrollView
+      backgroundMode="tertiary"
       contentContainerStyle={style.get("flex-grow-1")}
       style={style.flatten(["padding-x-page"])}
     >
@@ -196,7 +197,7 @@ export const RecoverMnemonicScreen: FunctionComponent = observer(() => {
                 </View>
               }
               style={StyleSheet.flatten([
-                style.flatten(["h6", "color-text-black-medium"]),
+                style.flatten(["h6", "color-text-middle"]),
                 {
                   minHeight: 20 * 4,
                   textAlignVertical: "top",

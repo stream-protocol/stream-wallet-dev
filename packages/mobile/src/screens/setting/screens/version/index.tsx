@@ -6,7 +6,7 @@ import codePush from "react-native-code-push";
 import { codeBundleId } from "../../../../../bugsnag.env";
 import { TouchableWithoutFeedback } from "react-native-gesture-handler";
 
-export const KeplrVersionScreen: FunctionComponent = () => {
+export const StreamVersionScreen: FunctionComponent = () => {
   const [appVersion] = useState(() => DeviceInfo.getVersion());
   const [buildNumber] = useState(() => DeviceInfo.getBuildNumber());
   // "undefined" means that it is on fetching,
@@ -69,7 +69,7 @@ export const KeplrVersionScreen: FunctionComponent = () => {
   }
 
   return (
-    <PageWithScrollViewInBottomTabView>
+    <PageWithScrollViewInBottomTabView backgroundMode="secondary">
       <SettingSectionTitle title="App" />
       <TouchableWithoutFeedback
         onPress={() => {

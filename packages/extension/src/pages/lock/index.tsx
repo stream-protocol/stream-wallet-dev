@@ -14,9 +14,12 @@ import { EmptyLayout } from "../../layouts/empty-layout";
 import style from "./style.module.scss";
 
 import { FormattedMessage, useIntl } from "react-intl";
-import { useInteractionInfo } from "@keplr-wallet/hooks";
+import { useInteractionInfo } from "@stream-wallet/hooks";
 import { useHistory } from "react-router";
 import delay from "delay";
+import { StartAutoLockMonitoringMsg } from "@stream-wallet/background";
+import { InExtensionMessageRequester } from "@stream-wallet/router-extension";
+import { BACKGROUND_PORT } from "@stream-wallet/router";
 
 interface FormData {
   password: string;
@@ -34,7 +37,7 @@ export const LockPage: FunctionComponent = observer(() => {
     },
   });
 
-  const { keyRingStore } = useStore();
+  const { keyRingStore, uiConfigStore } = useStore();
   const [loading, setLoading] = useState(false);
 
   const interactionInfo = useInteractionInfo(() => {
@@ -56,6 +59,12 @@ export const LockPage: FunctionComponent = observer(() => {
           setLoading(true);
           try {
             await keyRingStore.unlock(data.password);
+
+            const msg = new StartAutoLockMonitoringMsg();
+            const requester = new InExtensionMessageRequester();
+            // Make sure to notify that auto lock service to start check locking after duration.
+            await requester.sendMessage(BACKGROUND_PORT, msg);
+
             if (interactionInfo.interaction) {
               if (!interactionInfo.interactionInternal) {
                 // XXX: If the connection doesn't have the permission,
@@ -63,7 +72,7 @@ export const LockPage: FunctionComponent = observer(() => {
                 //      Thus, due to the yet uncertain reason, it requests new interaction for granting permission
                 //      before the `window.close()`. And, it could make the permission page closed right after page changes.
                 //      Unfortunately, I still don't know the exact cause.
-                //      Anyway, for now, to reduce this problem, jsut wait small time, and close the window only if the page is not changed.
+                //      Anyway, for now, to reduce this problem, wait small time, and close the window only if the page is not changed.
                 await delay(100);
                 if (window.location.href.includes("#/unlock")) {
                   window.close();
@@ -86,8 +95,13 @@ export const LockPage: FunctionComponent = observer(() => {
         })}
       >
         <Banner
-          icon={require("../../public/assets/temp-icon.svg")}
-          logo={require("../../public/assets/logo-temp.png")}
+          icon={
+            uiConfigStore.isBeta
+              ? require("../../public/assets/logo-beta-256.png")
+              : require("../../public/assets/logo-256.png")
+          }
+          logo={require("../../public/assets/brand-text.png")}
+          subtitle="Wallet for the Interchain"
         />
         <PasswordInput
           label={intl.formatMessage({

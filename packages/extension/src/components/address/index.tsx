@@ -1,41 +1,32 @@
-import React from "react";
+import React, { FunctionComponent } from "react";
 
 import { ToolTip } from "../tooltip";
-import { Bech32Address } from "@keplr-wallet/cosmos";
+import { Bech32Address } from "@stream-wallet/cosmos";
 
 export interface AddressProps {
-  maxCharacters: number;
   children: string;
   tooltipFontSize?: string;
   tooltipAddress?: string;
-  iconClass?: string;
-
-  lineBreakBeforePrefix?: boolean;
 }
 
-export class Address extends React.Component<AddressProps> {
-  copyRef = React.createRef<HTMLDivElement>();
+export interface Bech32AddressProps {
+  maxCharacters: number;
+  lineBreakBeforePrefix?: boolean;
+  isRaw?: false;
+}
 
-  componentDidMount(): void {
-    if (this.copyRef.current) {
-      this.copyRef.current.addEventListener("copy", this.onCopy);
-    }
-  }
+export interface RawAddressProps {
+  isRaw: true;
+}
 
-  componentWillUnmount(): void {
-    if (this.copyRef.current) {
-      this.copyRef.current.removeEventListener("copy", this.onCopy);
-    }
-  }
+export const Address: FunctionComponent<
+  AddressProps & (Bech32AddressProps | RawAddressProps)
+> = (props) => {
+  const { tooltipFontSize, children } = props;
+  const tooltipAddress = props.tooltipAddress ? props.tooltipAddress : children;
 
-  render() {
-    const { tooltipFontSize, lineBreakBeforePrefix, children } = this.props;
-
-    const tooltipAddress = this.props.tooltipAddress
-      ? this.props.tooltipAddress
-      : children;
-
-    const iconClass = [this.props.iconClass, "pr-2"].join(" ");
+  if ("maxCharacters" in props) {
+    const { lineBreakBeforePrefix } = props;
 
     return (
       <ToolTip
@@ -43,7 +34,6 @@ export class Address extends React.Component<AddressProps> {
         options={{ placement: "top" }}
         tooltip={
           <div
-            ref={this.copyRef}
             className="address-tooltip"
             style={{ fontSize: tooltipFontSize }}
           >
@@ -58,17 +48,22 @@ export class Address extends React.Component<AddressProps> {
           </div>
         }
       >
-        {this.props.iconClass ? <i className={iconClass} /> : ""}
-        {Bech32Address.shortenAddress(children, this.props.maxCharacters)}
+        {Bech32Address.shortenAddress(children, props.maxCharacters)}
       </ToolTip>
     );
   }
 
-  onCopy = async (e: ClipboardEvent) => {
-    if (e.clipboardData) {
-      // Remove line breaks.
-      const pre = await navigator.clipboard.readText();
-      await navigator.clipboard.writeText(pre.replace(/(\r\n|\n|\r)/gm, ""));
-    }
-  };
-}
+  return (
+    <ToolTip
+      trigger="hover"
+      options={{ placement: "top" }}
+      tooltip={
+        <div className="address-tooltip" style={{ fontSize: tooltipFontSize }}>
+          {tooltipAddress}
+        </div>
+      }
+    >
+      {children}
+    </ToolTip>
+  );
+};

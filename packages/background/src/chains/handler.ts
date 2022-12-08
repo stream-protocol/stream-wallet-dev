@@ -1,11 +1,17 @@
-import { Env, Handler, InternalHandler, Message } from "@keplr-wallet/router";
+import {
+  Env,
+  Handler,
+  InternalHandler,
+  StreamError,
+  Message,
+} from "@stream-wallet/router";
 import { ChainsService } from "./service";
 import {
   GetChainInfosMsg,
   RemoveSuggestedChainInfoMsg,
   SuggestChainInfoMsg,
 } from "./messages";
-import { ChainInfo } from "@keplr-wallet/types";
+import { ChainInfo } from "@stream-wallet/types";
 
 type Writeable<T> = { -readonly [P in keyof T]: T[P] };
 
@@ -25,7 +31,7 @@ export const getHandler: (service: ChainsService) => Handler = (service) => {
           msg as RemoveSuggestedChainInfoMsg
         );
       default:
-        throw new Error("Unknown msg type");
+        throw new StreamError("chains", 110, "Unknown msg type");
     }
   };
 };

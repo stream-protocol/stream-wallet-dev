@@ -8,7 +8,7 @@ import { WCMessageRequester } from "../../stores/wallet-connect/msg-requester";
 import { WCGoBackToBrowserModal } from "../../modals/wc-go-back-to-browser";
 import { BackHandler, Platform } from "react-native";
 import { LoadingScreenModal } from "../loading-screen/modal";
-import { KeyRingStatus } from "@keplr-wallet/background";
+import { KeyRingStatus } from "@stream-wallet/background";
 
 export const InteractionModalsProivder: FunctionComponent = observer(
   ({ children }) => {

@@ -5,30 +5,29 @@ import {
 } from "@walletconnect/types";
 import {
   ChainInfo,
-  Keplr,
-  KeplrIntereactionOptions,
-  KeplrMode,
-  KeplrSignOptions,
+  EthSignType,
+  Stream,
+  StreamIntereactionOptions,
+  StreamMode,
+  StreamSignOptions,
   Key,
-} from "@keplr-wallet/types";
-import { DirectSignResponse, OfflineDirectSigner } from "@cosmjs/proto-signing";
-import {
+  DirectSignResponse,
+  OfflineDirectSigner,
   AminoSignResponse,
   BroadcastMode,
-  OfflineSigner,
+  OfflineAminoSigner,
   StdSignature,
   StdSignDoc,
-  StdTx,
-} from "@cosmjs/launchpad";
+} from "@stream-wallet/types";
 import {
   CosmJSOfflineSigner,
   CosmJSOfflineSignerOnlyAmino,
-} from "@keplr-wallet/provider";
+} from "@stream-wallet/provider";
 import { SecretUtils } from "secretjs/types/enigmautils";
 import { payloadId } from "@walletconnect/utils";
 import deepmerge from "deepmerge";
 import { Buffer } from "buffer/";
-import { IndexedDBKVStore, KVStore } from "@keplr-wallet/common";
+import { IndexedDBKVStore, KVStore } from "@stream-wallet/common";
 
 // VersionFormatRegExp checks if a chainID is in the format required for parsing versions
 // The chainID should be in the form: `{identifier}-{version}`
@@ -51,7 +50,7 @@ function parseChainId(
   }
 }
 
-export type KeplrGetKeyWalletCoonectV1Response = {
+export type StreamGetKeyWalletCoonectV1Response = {
   address: string;
   algo: string;
   bech32Address: string;
@@ -60,7 +59,7 @@ export type KeplrGetKeyWalletCoonectV1Response = {
   pubKey: string;
 };
 
-export type KeplrKeystoreMayChangedEventParam = {
+export type StreamKeystoreMayChangedEventParam = {
   algo: string;
   name: string;
   isNanoLedger: boolean;
@@ -72,12 +71,12 @@ export type KeplrKeystoreMayChangedEventParam = {
   }[];
 };
 
-export class KeplrWalletConnectV1 implements Keplr {
+export class StreamWalletConnectV1 implements Stream {
   constructor(
     public readonly connector: IConnector,
     public readonly options: {
       kvStore?: KVStore;
-      sendTx?: Keplr["sendTx"];
+      sendTx?: Stream["sendTx"];
       onBeforeSendRequest?: (
         request: Partial<IJsonRpcRequest>,
         options?: IRequestOptions
@@ -90,7 +89,7 @@ export class KeplrWalletConnectV1 implements Keplr {
     } = {}
   ) {
     if (!options.kvStore) {
-      options.kvStore = new IndexedDBKVStore("keplr_wallet_connect");
+      options.kvStore = new IndexedDBKVStore("stream-wallet_wallet_connect");
     }
 
     connector.on("disconnect", () => {
@@ -101,9 +100,9 @@ export class KeplrWalletConnectV1 implements Keplr {
   }
 
   readonly version: string = "0.9.0";
-  readonly mode: KeplrMode = "walletconnect";
+  readonly mode: StreamMode = "walletconnect";
 
-  defaultOptions: KeplrIntereactionOptions = {};
+  defaultOptions: StreamIntereactionOptions = {};
 
   protected readonly onCallReqeust = async (
     error: Error | null,
@@ -119,10 +118,10 @@ export class KeplrWalletConnectV1 implements Keplr {
     }
 
     if (
-      payload.method === "keplr_keystore_may_changed_event_wallet_connect_v1"
+      payload.method === "stream-wallet_keystore_may_changed_event_wallet_connect_v1"
     ) {
       const param = payload.params[0] as
-        | KeplrKeystoreMayChangedEventParam
+        | StreamKeystoreMayChangedEventParam
         | undefined;
       if (!param) {
         return;
@@ -135,7 +134,7 @@ export class KeplrWalletConnectV1 implements Keplr {
 
       const mayChangedKeyMap: Record<
         string,
-        KeplrGetKeyWalletCoonectV1Response
+        StreamGetKeyWalletCoonectV1Response
       > = {};
       for (const mayChangedKey of param.keys) {
         mayChangedKeyMap[mayChangedKey.chainIdentifier] = {
@@ -174,16 +173,13 @@ export class KeplrWalletConnectV1 implements Keplr {
 
       if (hasChanged) {
         await this.saveAllLastSeenKey(lastSeenKeys);
-        window.dispatchEvent(new Event("keplr_keystorechange"));
+        window.dispatchEvent(new Event("stream-wallet_keystorechange"));
       }
     }
   };
 
   protected async clearSaved(): Promise<void> {
-    const kvStore = this.options.kvStore;
-    if (kvStore === undefined) {
-      throw new Error("KVStore is undefined");
-    }
+    const kvStore = this.options.kvStore!;
 
     await Promise.all([
       kvStore.set(this.getKeyHasEnabled(), null),
@@ -229,7 +225,7 @@ export class KeplrWalletConnectV1 implements Keplr {
     await this.sendCustomRequest({
       id: payloadId(),
       jsonrpc: "2.0",
-      method: "keplr_enable_wallet_connect_v1",
+      method: "stream-wallet_enable_wallet_connect_v1",
       params: chainIds,
     });
 
@@ -242,7 +238,7 @@ export class KeplrWalletConnectV1 implements Keplr {
 
   protected async getHasEnabledChainIds(): Promise<string[]> {
     return (
-      (await this.options.kvStore?.get<string[]>(this.getKeyHasEnabled())) ?? []
+      (await this.options.kvStore!.get<string[]>(this.getKeyHasEnabled())) ?? []
     );
   }
 
@@ -253,7 +249,7 @@ export class KeplrWalletConnectV1 implements Keplr {
         hasEnabledChainIds.push(chainId);
       }
     }
-    await this.options.kvStore?.set(
+    await this.options.kvStore!.set(
       this.getKeyHasEnabled(),
       hasEnabledChainIds
     );
@@ -312,10 +308,10 @@ export class KeplrWalletConnectV1 implements Keplr {
       await this.sendCustomRequest({
         id: payloadId(),
         jsonrpc: "2.0",
-        method: "keplr_get_key_wallet_connect_v1",
+        method: "stream-wallet_get_key_wallet_connect_v1",
         params: [chainId],
       })
-    )[0] as KeplrGetKeyWalletCoonectV1Response;
+    )[0] as StreamGetKeyWalletCoonectV1Response;
 
     await this.saveLastSeenKey(chainId, response);
 
@@ -335,7 +331,7 @@ export class KeplrWalletConnectV1 implements Keplr {
 
   protected async getLastSeenKey(
     chainId: string
-  ): Promise<KeplrGetKeyWalletCoonectV1Response | undefined> {
+  ): Promise<StreamGetKeyWalletCoonectV1Response | undefined> {
     const saved = await this.getAllLastSeenKey();
 
     if (!saved) {
@@ -346,20 +342,20 @@ export class KeplrWalletConnectV1 implements Keplr {
   }
 
   protected async getAllLastSeenKey() {
-    return this.options.kvStore?.get<{
-      [chainId: string]: KeplrGetKeyWalletCoonectV1Response | undefined;
+    return await this.options.kvStore!.get<{
+      [chainId: string]: StreamGetKeyWalletCoonectV1Response | undefined;
     }>(this.getKeyLastSeenKey());
   }
 
   protected async saveAllLastSeenKey(data: {
-    [chainId: string]: KeplrGetKeyWalletCoonectV1Response | undefined;
+    [chainId: string]: StreamGetKeyWalletCoonectV1Response | undefined;
   }) {
-    await this.options.kvStore?.set(this.getKeyLastSeenKey(), data);
+    await this.options.kvStore!.set(this.getKeyLastSeenKey(), data);
   }
 
   protected async saveLastSeenKey(
     chainId: string,
-    response: KeplrGetKeyWalletCoonectV1Response
+    response: StreamGetKeyWalletCoonectV1Response
   ) {
     let saved = await this.getAllLastSeenKey();
 
@@ -389,13 +385,22 @@ export class KeplrWalletConnectV1 implements Keplr {
     throw new Error("Not yet implemented");
   }
 
-  getOfflineSigner(chainId: string): OfflineSigner & OfflineDirectSigner {
+  signEthereum(
+    _chainId: string,
+    _signer: string,
+    _data: string | Uint8Array,
+    _mode: EthSignType
+  ): Promise<Uint8Array> {
+    throw new Error("Not yet implemented");
+  }
+
+  getOfflineSigner(chainId: string): OfflineAminoSigner & OfflineDirectSigner {
     return new CosmJSOfflineSigner(chainId, this);
   }
 
   async getOfflineSignerAuto(
     chainId: string
-  ): Promise<OfflineSigner | OfflineDirectSigner> {
+  ): Promise<OfflineAminoSigner | OfflineDirectSigner> {
     const key = await this.getKey(chainId);
     if (key.isNanoLedger) {
       return new CosmJSOfflineSignerOnlyAmino(chainId, this);
@@ -403,7 +408,7 @@ export class KeplrWalletConnectV1 implements Keplr {
     return new CosmJSOfflineSigner(chainId, this);
   }
 
-  getOfflineSignerOnlyAmino(chainId: string): OfflineSigner {
+  getOfflineSignerOnlyAmino(chainId: string): OfflineAminoSigner {
     return new CosmJSOfflineSignerOnlyAmino(chainId, this);
   }
 
@@ -417,15 +422,15 @@ export class KeplrWalletConnectV1 implements Keplr {
   /**
    * In the extension environment, this API let the extension to send the tx on behalf of the client.
    * But, in the wallet connect environment, in order to send the tx on behalf of the client, wallet should receive the tx data from remote.
-   * However, this approach is not efficient and hard to ensure the stability and `KeplrWalletConnect` should have the informations of rpc and rest endpoints.
+   * However, this approach is not efficient and hard to ensure the stability and `StreamWalletConnect` should have the informations of rpc and rest endpoints.
    * So, rather than implementing this, just fallback to the client sided implementation or throw error of the client sided implementation is not delivered to the `options`.
    * @param chainId
-   * @param tx
+   * @param stdTx
    * @param mode
    */
   sendTx(
     chainId: string,
-    tx: StdTx | Uint8Array,
+    tx: Uint8Array,
     mode: BroadcastMode
   ): Promise<Uint8Array> {
     if (this.options.sendTx) {
@@ -439,13 +444,13 @@ export class KeplrWalletConnectV1 implements Keplr {
     chainId: string,
     signer: string,
     signDoc: StdSignDoc,
-    signOptions: KeplrSignOptions = {}
+    signOptions: StreamSignOptions = {}
   ): Promise<AminoSignResponse> {
     return (
       await this.sendCustomRequest({
         id: payloadId(),
         jsonrpc: "2.0",
-        method: "keplr_sign_amino_wallet_connect_v1",
+        method: "stream-wallet_sign_amino_wallet_connect_v1",
         params: [
           chainId,
           signer,
@@ -465,7 +470,7 @@ export class KeplrWalletConnectV1 implements Keplr {
       chainId?: string | null;
       accountNumber?: Long | null;
     },
-    _signOptions: KeplrSignOptions = {}
+    _signOptions: StreamSignOptions = {}
   ): Promise<DirectSignResponse> {
     throw new Error("Not yet implemented");
   }
@@ -475,6 +480,20 @@ export class KeplrWalletConnectV1 implements Keplr {
     _contractAddress: string,
     _viewingKey?: string
   ): Promise<void> {
+    throw new Error("Not yet implemented");
+  }
+
+  experimentalSignEIP712CosmosTx_v0(
+    _chainId: string,
+    _signer: string,
+    _eip712: {
+      types: Record<string, { name: string; type: string }[] | undefined>;
+      domain: Record<string, any>;
+      primaryType: string;
+    },
+    _signDoc: StdSignDoc,
+    _signOptions: StreamSignOptions = {}
+  ): Promise<AminoSignResponse> {
     throw new Error("Not yet implemented");
   }
 }

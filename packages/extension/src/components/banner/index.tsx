@@ -6,7 +6,7 @@ import style from "./style.module.scss";
 interface Props {
   icon: string;
   logo: string;
-  subtitle?: string;
+  subtitle: string;
 }
 
 export const Banner: FunctionComponent<Props> = ({ icon, logo, subtitle }) => {
@@ -15,10 +15,10 @@ export const Banner: FunctionComponent<Props> = ({ icon, logo, subtitle }) => {
       <div className={style.empty} />
       <div className={style.flexHorizontal}>
         <div className={style.empty} />
-        <div className={style.flexVertical}>
+        <div className={classmames(style.flexVertical, style.itemsCenter)}>
           <img className={style.icon} src={icon} />
           <img className={style.logo} src={logo} />
-          {subtitle && <div className={style.subtitle}>{subtitle}</div>}
+          <div className={style.subtitle}>{subtitle}</div>
         </div>
         <div className={style.empty} />
       </div>

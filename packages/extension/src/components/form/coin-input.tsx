@@ -21,8 +21,8 @@ import {
   NegativeAmountError,
   InsufficientAmountError,
   IAmountConfig,
-} from "@keplr-wallet/hooks";
-import { CoinPretty, Dec, DecUtils, Int } from "@keplr-wallet/unit";
+} from "@stream-wallet/hooks";
+import { CoinPretty, Dec, DecUtils, Int } from "@stream-wallet/unit";
 import { FormattedMessage, useIntl } from "react-intl";
 import { useStore } from "../../stores";
 
@@ -61,7 +61,7 @@ export const CoinInput: FunctionComponent<CoinInputProps> = observer(
       return Buffer.from(bytes).toString("hex");
     });
 
-    const error = amountConfig.getError();
+    const error = amountConfig.error;
     const errorText: string | undefined = useMemo(() => {
       if (error) {
         switch (error.constructor) {

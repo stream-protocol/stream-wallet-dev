@@ -9,9 +9,9 @@ import { Input } from "../../../../components/form";
 import { observer } from "mobx-react-lite";
 import { useStore } from "../../../../stores";
 import useForm from "react-hook-form";
-import { Bech32Address } from "@keplr-wallet/cosmos";
-import { CW20Currency, Secret20Currency } from "@keplr-wallet/types";
-import { useInteractionInfo } from "@keplr-wallet/hooks";
+import { Bech32Address } from "@stream-wallet/cosmos";
+import { CW20Currency, Secret20Currency } from "@stream-wallet/types";
+import { useInteractionInfo } from "@stream-wallet/hooks";
 import { useLoadingIndicator } from "../../../../components/loading-indicator";
 import { useNotification } from "../../../../components/notification";
 
@@ -90,13 +90,13 @@ export const AddTokenPage: FunctionComponent = observer(() => {
           {},
           {},
           (_, viewingKey) => {
-            loadingIndicator.setIsLoading("create-veiwing-key", false);
+            loadingIndicator.setIsLoading("create-viewing-key", false);
 
             resolve(viewingKey);
           }
         )
         .then(() => {
-          loadingIndicator.setIsLoading("create-veiwing-key", true);
+          loadingIndicator.setIsLoading("create-viewing-key", true);
         })
         .catch(reject);
     });

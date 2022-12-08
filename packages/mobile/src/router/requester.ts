@@ -1,5 +1,10 @@
-import { Message, MessageRequester, Result } from "@keplr-wallet/router";
-import { JSONUint8Array } from "@keplr-wallet/router/build/json-uint8-array";
+import {
+  StreamError,
+  Message,
+  MessageRequester,
+  Result,
+} from "@stream-wallet/router";
+import { JSONUint8Array } from "@stream-wallet/router";
 import EventEmitter from "eventemitter3";
 import { RNRouterBackground, RNRouterUI } from "./rn-router";
 
@@ -59,7 +64,15 @@ export class RNMessageRequesterBase implements MessageRequester {
     }
 
     if (result.error) {
-      throw new Error(result.error);
+      if (typeof result.error === "string") {
+        throw new Error(result.error);
+      } else {
+        throw new StreamError(
+          result.error.module,
+          result.error.code,
+          result.error.message
+        );
+      }
     }
 
     return result.return;

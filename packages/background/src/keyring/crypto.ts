@@ -5,10 +5,11 @@ import {
   ScryptParams,
   CommonCrypto,
 } from "./types";
-import { Hash, RNG, KeyCurve } from "@keplr-wallet/crypto";
+import { Hash } from "@stream-wallet/crypto";
 import pbkdf2 from "pbkdf2";
 
 import { Buffer } from "buffer/";
+import { StreamError } from "@stream-wallet/router";
 
 /**
  * This is similar to ethereum's key store.
@@ -21,7 +22,6 @@ export interface KeyStore {
    * Below version "1", type is not defined and it is considered as "mnemonic".
    */
   type?: "mnemonic" | "privateKey" | "ledger";
-  curve: KeyCurve;
   coinTypeForChain: CoinTypeForChain;
   bip44HDPath?: BIP44HDPath;
   meta?: {
@@ -42,18 +42,16 @@ export interface KeyStore {
 
 export class Crypto {
   public static async encrypt(
-    rng: RNG,
     crypto: CommonCrypto,
     kdf: "scrypt" | "sha256" | "pbkdf2",
     type: "mnemonic" | "privateKey" | "ledger",
-    curve: KeyCurve,
     text: string,
     password: string,
     meta: Record<string, string>,
     bip44HDPath?: BIP44HDPath
   ): Promise<KeyStore> {
     let random = new Uint8Array(32);
-    const salt = Buffer.from(await rng(random)).toString("hex");
+    const salt = Buffer.from(await crypto.rng(random)).toString("hex");
 
     const scryptParams: ScryptParams = {
       salt,
@@ -86,13 +84,13 @@ export class Crypto {
             );
           });
         default:
-          throw new Error("Unknown kdf");
+          throw new StreamError("keyring", 220, "Unknown kdf");
       }
     })();
     const buf = Buffer.from(text);
 
     random = new Uint8Array(16);
-    const iv = Buffer.from(await rng(random));
+    const iv = Buffer.from(await crypto.rng(random));
 
     const counter = new Counter(0);
     counter.setBytes(iv);
@@ -109,7 +107,6 @@ export class Crypto {
       version: "1.2",
       type,
       coinTypeForChain: {},
-      curve,
       bip44HDPath,
       meta,
       crypto: {
@@ -156,7 +153,7 @@ export class Crypto {
             );
           });
         default:
-          throw new Error("Unknown kdf");
+          throw new StreamError("keyring", 220, "Unknown kdf");
       }
     })();
 
@@ -171,7 +168,7 @@ export class Crypto {
       ])
     );
     if (!Buffer.from(mac).equals(Buffer.from(keyStore.crypto.mac, "hex"))) {
-      throw new Error("Unmatched mac");
+      throw new StreamError("keyring", 222, "Unmatched mac");
     }
 
     return Buffer.from(

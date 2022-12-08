@@ -1,5 +1,5 @@
 import React, { FunctionComponent } from "react";
-import { RegisterConfig } from "@keplr-wallet/hooks";
+import { RegisterConfig } from "@stream-wallet/hooks";
 import { FormattedMessage, useIntl } from "react-intl";
 import { Button, Form } from "reactstrap";
 import useForm from "react-hook-form";
@@ -27,6 +27,7 @@ export const ImportLedgerIntro: FunctionComponent<{
       color="primary"
       outline
       block
+      size="lg"
       onClick={(e) => {
         e.preventDefault();
 
@@ -96,7 +97,6 @@ export const ImportLedgerPage: FunctionComponent<{
             }),
           })}
           error={errors.name && errors.name.message}
-          maxLength={20}
         />
         {registerConfig.mode === "create" ? (
           <React.Fragment>
@@ -146,6 +146,7 @@ export const ImportLedgerPage: FunctionComponent<{
           color="primary"
           type="submit"
           block
+          size="lg"
           data-loading={registerConfig.isLoading}
         >
           <FormattedMessage id="register.create.button.next" />

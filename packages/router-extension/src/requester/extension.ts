@@ -2,8 +2,9 @@ import {
   MessageRequester,
   Message,
   JSONUint8Array,
-} from "@keplr-wallet/router";
-import { getKeplrExtensionRouterId } from "../utils";
+  StreamError,
+} from "@stream-wallet/router";
+import { getStreamExtensionRouterId } from "../utils";
 
 export class InExtensionMessageRequester implements MessageRequester {
   async sendMessage<M extends Message<unknown>>(
@@ -18,7 +19,7 @@ export class InExtensionMessageRequester implements MessageRequester {
     msg["origin"] = window.location.origin;
     msg.routerMeta = {
       ...msg.routerMeta,
-      routerId: getKeplrExtensionRouterId(),
+      routerId: getStreamExtensionRouterId(),
     };
 
     const result = JSONUint8Array.unwrap(
@@ -34,7 +35,15 @@ export class InExtensionMessageRequester implements MessageRequester {
     }
 
     if (result.error) {
-      throw new Error(result.error);
+      if (typeof result.error === "string") {
+        throw new Error(result.error);
+      } else {
+        throw new StreamError(
+          result.error.module,
+          result.error.code,
+          result.error.message
+        );
+      }
     }
 
     return result.return;
@@ -53,7 +62,7 @@ export class InExtensionMessageRequester implements MessageRequester {
     msg["origin"] = window.location.origin;
     msg.routerMeta = {
       ...msg.routerMeta,
-      routerId: getKeplrExtensionRouterId(),
+      routerId: getStreamExtensionRouterId(),
     };
 
     const result = JSONUint8Array.unwrap(
@@ -69,7 +78,15 @@ export class InExtensionMessageRequester implements MessageRequester {
     }
 
     if (result.error) {
-      throw new Error(result.error);
+      if (typeof result.error === "string") {
+        throw new Error(result.error);
+      } else {
+        throw new StreamError(
+          result.error.module,
+          result.error.code,
+          result.error.message
+        );
+      }
     }
 
     return result.return;

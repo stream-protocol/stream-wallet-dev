@@ -11,11 +11,11 @@ import {
   getSecret20ViewingKeyPermissionType,
   AddPermissionOrigin,
   GetOriginPermittedChainsMsg,
-} from "@keplr-wallet/background";
+} from "@stream-wallet/background";
 import { computed, flow, makeObservable, observable } from "mobx";
 import { HasMapStore } from "../../common";
-import { BACKGROUND_PORT, MessageRequester } from "@keplr-wallet/router";
-import { toGenerator } from "@keplr-wallet/common";
+import { BACKGROUND_PORT, MessageRequester } from "@stream-wallet/router";
+import { toGenerator } from "@stream-wallet/common";
 
 export class Secret20ViewingKeyPermissionInnerStore {
   @observable.ref

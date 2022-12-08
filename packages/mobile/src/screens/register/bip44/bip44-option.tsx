@@ -1,5 +1,5 @@
 import { action, computed, makeObservable, observable } from "mobx";
-import { BIP44HDPath } from "@keplr-wallet/background";
+import { BIP44HDPath } from "@stream-wallet/background";
 import { useState } from "react";
 
 export class BIP44Option {

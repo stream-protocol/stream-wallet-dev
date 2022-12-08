@@ -1,4 +1,4 @@
-import { Env, Handler, InternalHandler, Message } from "@keplr-wallet/router";
+import { Env, Handler, InternalHandler, Message } from "@stream-wallet/router";
 import { SetPersistentMemoryMsg, GetPersistentMemoryMsg } from "./messages";
 import { PersistentMemoryService } from "./service";
 

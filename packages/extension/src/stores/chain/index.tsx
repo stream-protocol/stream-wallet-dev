@@ -3,23 +3,27 @@ import { observable, action, computed, makeObservable, flow } from "mobx";
 import {
   ChainInfoInner,
   ChainStore as BaseChainStore,
-} from "@keplr-wallet/stores";
+  DeferInitialQueryController,
+  ObservableQuery,
+} from "@stream-wallet/stores";
 
-import { ChainInfo } from "@keplr-wallet/types";
+import { ChainInfo } from "@stream-wallet/types";
 import {
-  ChainInfoWithEmbed,
+  ChainInfoWithCoreTypes,
   SetPersistentMemoryMsg,
   GetPersistentMemoryMsg,
   GetChainInfosMsg,
   RemoveSuggestedChainInfoMsg,
   TryUpdateChainMsg,
-} from "@keplr-wallet/background";
-import { BACKGROUND_PORT } from "@keplr-wallet/router";
+  SetChainEndpointsMsg,
+  ResetChainEndpointsMsg,
+} from "@stream-wallet/background";
+import { BACKGROUND_PORT } from "@stream-wallet/router";
 
-import { MessageRequester } from "@keplr-wallet/router";
-import { toGenerator } from "@keplr-wallet/common";
+import { MessageRequester } from "@stream-wallet/router";
+import { toGenerator } from "@stream-wallet/common";
 
-export class ChainStore extends BaseChainStore<ChainInfoWithEmbed> {
+export class ChainStore extends BaseChainStore<ChainInfoWithCoreTypes> {
   @observable
   protected _selectedChainId: string;
 
@@ -29,7 +33,8 @@ export class ChainStore extends BaseChainStore<ChainInfoWithEmbed> {
 
   constructor(
     embedChainInfos: ChainInfo[],
-    protected readonly requester: MessageRequester
+    protected readonly requester: MessageRequester,
+    protected readonly deferInitialQueryController: DeferInitialQueryController
   ) {
     super(
       embedChainInfos.map((chainInfo) => {
@@ -66,7 +71,7 @@ export class ChainStore extends BaseChainStore<ChainInfoWithEmbed> {
   }
 
   @computed
-  get current(): ChainInfoInner<ChainInfoWithEmbed> {
+  get current(): ChainInfoInner<ChainInfoWithCoreTypes> {
     if (this.hasChain(this._selectedChainId)) {
       return this.getChain(this._selectedChainId);
     }
@@ -87,6 +92,8 @@ export class ChainStore extends BaseChainStore<ChainInfoWithEmbed> {
   protected *init() {
     this._isInitializing = true;
     yield this.getChainInfosFromBackground();
+
+    this.deferInitialQueryController.ready();
 
     // Get last view chain id to persistent background
     const msg = new GetPersistentMemoryMsg();
@@ -129,7 +136,39 @@ export class ChainStore extends BaseChainStore<ChainInfoWithEmbed> {
   @flow
   *tryUpdateChain(chainId: string) {
     const msg = new TryUpdateChainMsg(chainId);
-    yield this.requester.sendMessage(BACKGROUND_PORT, msg);
-    yield this.getChainInfosFromBackground();
+    const result = yield* toGenerator(
+      this.requester.sendMessage(BACKGROUND_PORT, msg)
+    );
+    if (result.updated) {
+      yield this.getChainInfosFromBackground();
+    }
+  }
+
+  @flow
+  *setChainEndpoints(
+    chainId: string,
+    rpc: string | undefined,
+    rest: string | undefined
+  ) {
+    const msg = new SetChainEndpointsMsg(chainId, rpc, rest);
+    const newChainInfos = yield* toGenerator(
+      this.requester.sendMessage(BACKGROUND_PORT, msg)
+    );
+
+    this.setChainInfos(newChainInfos);
+
+    ObservableQuery.refreshAllObserved();
+  }
+
+  @flow
+  *resetChainEndpoints(chainId: string) {
+    const msg = new ResetChainEndpointsMsg(chainId);
+    const newChainInfos = yield* toGenerator(
+      this.requester.sendMessage(BACKGROUND_PORT, msg)
+    );
+
+    this.setChainInfos(newChainInfos);
+
+    ObservableQuery.refreshAllObserved();
   }
 }

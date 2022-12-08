@@ -3,7 +3,7 @@ import { GovernanceCardBody } from "./card";
 import { observer } from "mobx-react-lite";
 import { PageWithSectionList } from "../../components/page";
 import { useStore } from "../../stores";
-import { ObservableQueryProposal } from "@keplr-wallet/stores";
+import { ObservableQueryProposal } from "@stream-wallet/stores";
 import { Card, CardDivider } from "../../components/card";
 import { useStyle } from "../../styles";
 
@@ -22,6 +22,7 @@ export const GovernanceScreen: FunctionComponent = observer(() => {
 
   return (
     <PageWithSectionList
+      backgroundMode="gradient"
       sections={sections}
       keyExtractor={(item: ObservableQueryProposal) => {
         return item.id;

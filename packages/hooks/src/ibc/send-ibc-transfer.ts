@@ -1,5 +1,9 @@
-import { ChainGetter, CosmosMsgOpts } from "@keplr-wallet/stores";
-import { ObservableQueryBalances } from "@keplr-wallet/stores/build/query/balances";
+import {
+  ChainGetter,
+  IAccountStore,
+  IQueriesStore,
+  MsgOpt,
+} from "@stream-wallet/stores";
 import { useFeeConfig, useMemoConfig } from "../tx";
 import { useIBCAmountConfig } from "./amount";
 import { useIBCTransferGasConfig } from "./gas";
@@ -12,34 +16,43 @@ import { useIBCRecipientConfig } from "./reciepient";
  * But, actually, the recipient config's chain id would be set as the sending chain id if the channel not set.
  * So, you should remember that the recipient config's chain id is equalt to the sending chain id, if channel not set.
  * @param chainGetter
+ * @param queriesStore
+ * @param accountStore
  * @param chainId
- * @param msgOpts
  * @param sender
- * @param queryBalances
- * @param ensEndpoint
+ * @param options
  */
 export const useIBCTransferConfig = (
   chainGetter: ChainGetter,
+  queriesStore: IQueriesStore,
+  accountStore: IAccountStore<{
+    cosmos: {
+      readonly msgOpts: {
+        readonly ibcTransfer: MsgOpt;
+      };
+    };
+  }>,
   chainId: string,
-  msgOpts: CosmosMsgOpts["ibcTransfer"],
   sender: string,
-  queryBalances: ObservableQueryBalances,
-  ensEndpoint?: string
+  options: {
+    ensEndpoint?: string;
+    allowHexAddressOnEthermint?: boolean;
+  } = {}
 ) => {
   const amountConfig = useIBCAmountConfig(
     chainGetter,
+    queriesStore,
     chainId,
-    sender,
-    queryBalances
+    sender
   );
 
   const memoConfig = useMemoConfig(chainGetter, chainId);
-  const gasConfig = useIBCTransferGasConfig(chainGetter, chainId, msgOpts);
+  const gasConfig = useIBCTransferGasConfig(chainGetter, accountStore, chainId);
   const feeConfig = useFeeConfig(
     chainGetter,
+    queriesStore,
     chainId,
     sender,
-    queryBalances,
     amountConfig,
     gasConfig
   );
@@ -53,7 +66,7 @@ export const useIBCTransferConfig = (
     chainGetter,
     chainId,
     channelConfig,
-    ensEndpoint
+    options
   );
 
   return {

@@ -1,9 +1,8 @@
 import { InteractionStore } from "./interaction";
 import { autorun, computed, flow, makeObservable, observable } from "mobx";
-import { StdSignDoc } from "@cosmjs/launchpad";
-import { InteractionWaitingData } from "@keplr-wallet/background";
-import { SignDocWrapper } from "@keplr-wallet/cosmos";
-import { KeplrSignOptions } from "@keplr-wallet/types";
+import { InteractionWaitingData } from "@stream-wallet/background";
+import { SignDocWrapper } from "@stream-wallet/cosmos";
+import { EthSignType, StreamSignOptions, StdSignDoc } from "@stream-wallet/types";
 
 export class SignInteractionStore {
   @observable
@@ -32,9 +31,10 @@ export class SignInteractionStore {
           mode: "amino";
           signer: string;
           signDoc: StdSignDoc;
-          signOptions: KeplrSignOptions;
+          signOptions: StreamSignOptions;
           isADR36SignDoc: boolean;
           isADR36WithString?: boolean;
+          ethSignType?: EthSignType;
         }
       | {
           msgOrigin: string;
@@ -42,7 +42,7 @@ export class SignInteractionStore {
           mode: "direct";
           signer: string;
           signDocBytes: Uint8Array;
-          signOptions: KeplrSignOptions;
+          signOptions: StreamSignOptions;
         }
     >("request-sign");
   }
@@ -54,8 +54,9 @@ export class SignInteractionStore {
         msgOrigin: string;
         signer: string;
         signDocWrapper: SignDocWrapper;
-        signOptions: KeplrSignOptions;
+        signOptions: StreamSignOptions;
         isADR36WithString?: boolean;
+        ethSignType?: EthSignType;
       }>
     | undefined {
     const datas = this.waitingDatas;
@@ -84,6 +85,8 @@ export class SignInteractionStore {
           "isADR36WithString" in data.data
             ? data.data.isADR36WithString
             : undefined,
+        ethSignType:
+          "ethSignType" in data.data ? data.data.ethSignType : undefined,
       },
     };
   }

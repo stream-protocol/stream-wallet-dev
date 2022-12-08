@@ -6,7 +6,7 @@ import { useStyle } from "../../../styles";
 import { DelegatedCard } from "./delegated-card";
 import { observer } from "mobx-react-lite";
 import { useStore } from "../../../stores";
-import { Dec } from "@keplr-wallet/unit";
+import { Dec } from "@stream-wallet/unit";
 import { UnbondingCard } from "./unbonding-card";
 
 export const ValidatorDetailsScreen: FunctionComponent = observer(() => {
@@ -42,7 +42,7 @@ export const ValidatorDetailsScreen: FunctionComponent = observer(() => {
   const style = useStyle();
 
   return (
-    <PageWithScrollView>
+    <PageWithScrollView backgroundMode="gradient">
       <ValidatorDetailsCard
         containerStyle={style.flatten(["margin-y-card-gap"])}
         validatorAddress={validatorAddress}

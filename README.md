@@ -1,65 +1,50 @@
-# Stream Wallet - Development
-
+# Stream Wallet
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![Twitter: Stream Wallet](https://img.shields.io/twitter/follow/stream-wallet.svg?style=social)](https://twitter.com/stream-wallet)
 
-[Stream Protocol](https://streamprotocol.org)'s fork of the Keplr wallet by [chainapsis](https://github.com/chainapsis), which is designed to act as a generic wallet software for blockchains built using the [Cosmos-SDK](https://github.com/cosmos/cosmos-sdk) and to support the inter-blockchain communication (IBC) protocol.
+> The most powerful wallet for the Cosmos ecosystem and the Interchain.
 
-The wallet is configured for the Fetch.ai Stargate network. 
+## Official Releases
 
-Further information on the Stream wallet can be found at the base [repo](https://github.com/stream-protocol/stream-wallet-extension).  
+> NOTE: We do not accept native integrations to the official releases through pull requests. Please feel free to check out Stream's [suggest chain](https://docs.stream-wallet.app/api/suggest-chain.html) feature for permissionless integrations to your chain.
 
-## Developing
+You can find the latest versions of the official managed releases on these links:
+- [Browser Extension](https://chrome.google.com/webstore/detail/stream-wallet/dmkamcknogkgcdfhhbddcghachkejeap)
+- [iOS App](https://apps.apple.com/us/app/stream-wallet/id1567851089)
+- [Android App](https://play.google.com/store/apps/details?id=app.streamprotocol.stream-wallet)
 
-### Environment Setup
+For help using Stream Wallet, Visit our [User Support Site](https://stream-wallet.crunch.help).
 
-Install global npm dependencies:
+## Building browser extension locally
+This repo requires `protoc` to be installed. Check [Install protobuf](https://grpc.io/docs/protoc-installation/) for details.  
 
-```bash
-npm install --global yarn lerna
-
-# TODO: install [watchman](https://facebook.github.io/watchman/docs/install.html)
-```
-
-[Bootstrap](https://lerna.js.org/#command-bootstrap) packages:
-
-```bash
+Clone this repo and run:
+```sh
 yarn bootstrap
-```
-
-Install package dependencies:
-
-```bash
-yarn install
-```
-
-Initial build:
-
-```bash
 yarn build
 ```
 
-### Local dev server
+Browser extension's build output is placed in `packages/extension/build/chrome`, and you can check out [this page](https://developer.chrome.com/extensions/getstarted) for installing the developing version.
 
-```bash
-yarn dev
-```
+This repo contains submodules that are not open sourced and are only available through the Chainapsis’ official Stream Browser Extension release. However, all primary features of the extension will work without the closed sourced submodules.
 
+Source code for mobile app is also placed in `packages/mobile`.
 
-### Developments and ToDo
+### Example
+Refer to the [Stream Example repository](https://github.com/stream-protocol/stream-wallet-example) for examples of how to integrate Stream signing support for your web interface/application.
 
-- Blockchain configuration and implementations
-- create icons, images and brand/logo designs, color presets HEX color codes: #000c72, #051150
-- develop wallet extensions
-- develop, implement STRM Token (ERC20)
-- creating npm packages to @stream-wallet/umbral-types, @stream-wallet/wallet-types
-- create/edit project mkdocs.yml documentation 
-- develop staking platform
-- develop token-bridge
-- etc..
+### Disclaimer
+Usage of any other packages besides @stream-wallet/types is not recommended.
+ - Any other packages besides @stream-wallet/types are actively being developed, backward compatibility is not in the scope of support.
+ - Since there are active changes being made, documentation is not being updated to the most recent version of the package as of right now. Documentations would be updated as packages get stable.
 
 ## Author
+👤 **Chainapsis**
+* Twitter: [@chainapsis](https://twitter.com/chainapsis)
+* Github: [@chainapsis](https://github.com/stream-protocol)
 
-👤 **Stream Protocol**
-
-* Twitter: [@stream_protocol](https://twitter.com/stream_protocol)
-* Github: [@streamprotocol](https://github.com/stream-protocol)
+## License
+### Browser Extension 
+Apache 2.0
+### iOS / Android App
+Copyright (c) 2021 Chainapsis Inc. All rights reserved.

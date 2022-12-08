@@ -1,4 +1,4 @@
-import React, { FunctionComponent, useEffect, useMemo, useState } from "react";
+import React, { FunctionComponent, useMemo, useState } from "react";
 import {
   FormGroup,
   Label,
@@ -23,10 +23,11 @@ import {
   ENSFailedToFetchError,
   ENSIsFetchingError,
   IIBCChannelConfig,
-} from "@keplr-wallet/hooks";
+  InvalidHexError,
+} from "@stream-wallet/hooks";
 import { observer } from "mobx-react-lite";
 import { useIntl } from "react-intl";
-import { ObservableEnsFetcher } from "@keplr-wallet/ens";
+import { ObservableEnsFetcher } from "@stream-wallet/ens";
 
 export interface AddressInputProps {
   recipientConfig: IRecipientConfig;
@@ -39,7 +40,6 @@ export interface AddressInputProps {
   disableAddressBook?: boolean;
 
   disabled?: boolean;
-  value: string;
 }
 
 export const AddressInput: FunctionComponent<AddressInputProps> = observer(
@@ -51,25 +51,22 @@ export const AddressInput: FunctionComponent<AddressInputProps> = observer(
     label,
     disableAddressBook,
     disabled = false,
-    value,
   }) => {
     const intl = useIntl();
+
     const [isAddressBookOpen, setIsAddressBookOpen] = useState(false);
+
     const [inputId] = useState(() => {
       const bytes = new Uint8Array(4);
       crypto.getRandomValues(bytes);
       return `input-${Buffer.from(bytes).toString("hex")}`;
     });
 
-    const isENSAddress = ObservableEnsFetcher?.isValidENS(
+    const isENSAddress = ObservableEnsFetcher.isValidENS(
       recipientConfig.rawRecipient
     );
-    useEffect(() => {
-      if (value) {
-        recipientConfig.setRawRecipient(value);
-      }
-    }, [recipientConfig, value]);
-    const error = recipientConfig.getError();
+
+    const error = recipientConfig.error;
     const errorText: string | undefined = useMemo(() => {
       if (error) {
         switch (error.constructor) {
@@ -90,6 +87,10 @@ export const AddressInput: FunctionComponent<AddressInputProps> = observer(
             });
           case ENSIsFetchingError:
             return;
+          case InvalidHexError:
+            return intl.formatMessage({
+              id: "input.recipient.error.invalid-hex",
+            });
           default:
             return intl.formatMessage({ id: "input.recipient.error.unknown" });
         }
@@ -109,10 +110,6 @@ export const AddressInput: FunctionComponent<AddressInputProps> = observer(
       },
     };
 
-    const handleSearchInputChange = (e: any) => {
-      e.preventDefault();
-      recipientConfig.setRawRecipient(e?.target?.value);
-    };
     return (
       <React.Fragment>
         <Modal
@@ -128,7 +125,6 @@ export const AddressInput: FunctionComponent<AddressInputProps> = observer(
               hideChainDropdown={true}
               selectHandler={selectAddressFromAddressBook}
               ibcChannelConfig={ibcChannelConfig}
-              isInTransaction={true}
             />
           </ModalBody>
         </Modal>
@@ -147,7 +143,8 @@ export const AddressInput: FunctionComponent<AddressInputProps> = observer(
               )}
               value={recipientConfig.rawRecipient}
               onChange={(e) => {
-                handleSearchInputChange(e);
+                recipientConfig.setRawRecipient(e.target.value);
+                e.preventDefault();
               }}
               autoComplete="off"
               disabled={disabled}

@@ -1,12 +1,12 @@
 import React, { FunctionComponent, useState } from "react";
 import { observer } from "mobx-react-lite";
-import { IFeeConfig, IGasConfig, NotLoadedFeeError } from "@keplr-wallet/hooks";
+import { IFeeConfig, IGasConfig, NotLoadedFeeError } from "@stream-wallet/hooks";
 import { Text, View } from "react-native";
 import { useStore } from "../../stores";
 import { useStyle } from "../../styles";
-import { CoinPretty, Dec } from "@keplr-wallet/unit";
+import { CoinPretty, Dec } from "@stream-wallet/unit";
 import { TouchableOpacity } from "react-native-gesture-handler";
-import { KeplrSignOptions } from "@keplr-wallet/types";
+import { StreamSignOptions } from "@stream-wallet/types";
 import { RightArrowIcon } from "../../components/icon";
 import { registerModal } from "../base";
 import { CardModal } from "../card";
@@ -53,7 +53,7 @@ export const FeeInSign: FunctionComponent<{
   feeConfig: IFeeConfig;
   gasConfig: IGasConfig;
 
-  signOptions?: KeplrSignOptions;
+  signOptions?: StreamSignOptions;
 }> = observer(({ isInternal, signOptions, feeConfig, gasConfig }) => {
   const { chainStore, priceStore } = useStore();
 
@@ -75,7 +75,7 @@ export const FeeInSign: FunctionComponent<{
 
   let isFeeLoading = false;
 
-  const error = feeConfig.getError();
+  const error = feeConfig.error;
   const errorText: string | undefined = (() => {
     if (error) {
       if (error.constructor === NotLoadedFeeError) {
@@ -100,11 +100,11 @@ export const FeeInSign: FunctionComponent<{
         <View
           style={style.flatten(["flex-row", "items-center", "margin-bottom-4"])}
         >
-          <Text style={style.flatten(["subtitle3", "color-text-black-medium"])}>
+          <Text style={style.flatten(["subtitle3", "color-text-middle"])}>
             Fee
           </Text>
           <View style={style.get("flex-1")} />
-          <Text style={style.flatten(["body3", "color-text-black-low"])}>
+          <Text style={style.flatten(["body3", "color-text-low"])}>
             {feePrice ? feePrice.toString() : "-"}
           </Text>
         </View>
@@ -119,8 +119,8 @@ export const FeeInSign: FunctionComponent<{
           >
             <Text
               style={style.flatten(
-                ["subtitle1", "color-text-black-medium"],
-                [canFeeEditable && "color-primary"]
+                ["subtitle1", "color-text-middle"],
+                [canFeeEditable && "color-blue-400"]
               )}
             >
               {fee.trim(true).toString()}
@@ -128,7 +128,7 @@ export const FeeInSign: FunctionComponent<{
             {canFeeEditable ? (
               <View style={style.flatten(["margin-left-6"])}>
                 <RightArrowIcon
-                  color={style.get("color-primary").color}
+                  color={style.get("color-blue-400").color}
                   height={12}
                 />
               </View>
@@ -159,7 +159,7 @@ export const FeeInSign: FunctionComponent<{
               style={style.flatten([
                 "absolute",
                 "text-caption1",
-                "color-error",
+                "color-red-400",
                 "margin-top-2",
                 "margin-left-4",
               ])}

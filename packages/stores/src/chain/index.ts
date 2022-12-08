@@ -12,9 +12,10 @@ import {
   BIP44,
   ChainInfo,
   Currency,
-} from "@keplr-wallet/types";
+  FeeCurrency,
+} from "@stream-wallet/types";
 import { ChainGetter } from "../common";
-import { ChainIdHelper } from "@keplr-wallet/cosmos";
+import { ChainIdHelper } from "@stream-wallet/cosmos";
 import { DeepReadonly } from "utility-types";
 import { AxiosRequestConfig } from "axios";
 import { keepAlive } from "mobx-utils";
@@ -179,6 +180,12 @@ export class ChainInfoInner<C extends ChainInfo = ChainInfo>
       return this.currencyMap.get(coinMinimalDenom);
     }
     this.addUnknownCurrencies(coinMinimalDenom);
+
+    // Unknown denom can be registered synchronously in some cases.
+    // For this case, re-try to get currency.
+    if (this.currencyMap.has(coinMinimalDenom)) {
+      return this.currencyMap.get(coinMinimalDenom);
+    }
   }
 
   /**
@@ -242,14 +249,8 @@ export class ChainInfoInner<C extends ChainInfo = ChainInfo>
     return this.raw.features;
   }
 
-  get feeCurrencies(): Currency[] {
+  get feeCurrencies(): FeeCurrency[] {
     return this.raw.feeCurrencies;
-  }
-
-  get gasPriceStep():
-    | { low: number; average: number; high: number }
-    | undefined {
-    return this.raw.gasPriceStep;
   }
 
   get rest(): string {

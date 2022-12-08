@@ -9,7 +9,7 @@ import { useLoadingScreen } from "../../../../providers/loading-screen";
 import {
   MultiKeyStoreInfoElem,
   MultiKeyStoreInfoWithSelectedElem,
-} from "@keplr-wallet/background";
+} from "@stream-wallet/background";
 import { View } from "react-native";
 import { useSmartNavigation } from "../../../../navigation";
 
@@ -152,14 +152,14 @@ export const SettingSelectAccountScreen: FunctionComponent = observer(() => {
               return (
                 <KeyStoreItem
                   key={i.toString()}
-                  label={keyStore.meta?.name || "Keplr Account"}
+                  label={keyStore.meta?.name || "Stream Account"}
                   paragraph={getKeyStoreParagraph(keyStore)}
                   topBorder={i === 0}
                   bottomBorder={keyStores.length - 1 !== i}
                   right={
                     keyStore.selected ? (
                       <CheckIcon
-                        color={style.get("color-primary").color}
+                        color={style.get("color-blue-400").color}
                         height={16}
                       />
                     ) : undefined
@@ -178,7 +178,7 @@ export const SettingSelectAccountScreen: FunctionComponent = observer(() => {
   };
 
   return (
-    <PageWithScrollViewInBottomTabView>
+    <PageWithScrollViewInBottomTabView backgroundMode="secondary">
       {renderKeyStores("apple id", appleTorusKeyStores)}
       {renderKeyStores("google account", googleTorusKeyStores)}
       {renderKeyStores("mnemonic seed", mnemonicKeyStores)}

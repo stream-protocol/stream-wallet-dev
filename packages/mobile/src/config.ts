@@ -1,5 +1,5 @@
-import { Bech32Address } from "@keplr-wallet/cosmos";
-import { ChainInfo } from "@keplr-wallet/types";
+import { Bech32Address } from "@stream-wallet/cosmos";
+import { ChainInfo } from "@stream-wallet/types";
 
 export const CoinGeckoAPIEndPoint = "https://api.coingecko.com/api/v3";
 
@@ -7,7 +7,6 @@ export const EthereumEndpoint =
   "https://mainnet.infura.io/v3/eeb00e81cdb2410098d5a270eff9b341";
 
 export interface AppChainInfo extends ChainInfo {
-  readonly chainSymbolImageUrl?: string;
   readonly hideInUI?: boolean;
   readonly txExplorer?: {
     readonly name: string;
@@ -17,8 +16,8 @@ export interface AppChainInfo extends ChainInfo {
 
 export const EmbedChainInfos: AppChainInfo[] = [
   {
-    rpc: "https://rpc-cosmoshub.keplr.app",
-    rest: "https://lcd-cosmoshub.keplr.app",
+    rpc: "https://rpc-cosmoshub.stream-wallet.app",
+    rest: "https://lcd-cosmoshub.stream-wallet.app",
     chainId: "cosmoshub-4",
     chainName: "Cosmos Hub",
     stakeCurrency: {
@@ -51,7 +50,7 @@ export const EmbedChainInfos: AppChainInfo[] = [
       },
     ],
     coinType: 118,
-    features: ["stargate", "ibc-transfer", "no-legacy-stdTx", "ibc-go"],
+    features: ["ibc-transfer", "ibc-go"],
     chainSymbolImageUrl: "https://dhj8dql1kzq2v.cloudfront.net/white/atom.png",
     txExplorer: {
       name: "Mintscan",
@@ -59,8 +58,8 @@ export const EmbedChainInfos: AppChainInfo[] = [
     },
   },
   {
-    rpc: "https://rpc-osmosis.keplr.app",
-    rest: "https://lcd-osmosis.keplr.app",
+    rpc: "https://rpc-osmosis.stream-wallet.app",
+    rest: "https://lcd-osmosis.stream-wallet.app",
     chainId: "osmosis-1",
     chainName: "Osmosis",
     stakeCurrency: {
@@ -98,15 +97,15 @@ export const EmbedChainInfos: AppChainInfo[] = [
         coinDecimals: 6,
         coinGeckoId: "osmosis",
         coinImageUrl: "https://dhj8dql1kzq2v.cloudfront.net/white/osmo.png",
+        gasPriceStep: {
+          low: 0,
+          average: 0.025,
+          high: 0.04,
+        },
       },
     ],
     coinType: 118,
-    gasPriceStep: {
-      low: 0,
-      average: 0,
-      high: 0.025,
-    },
-    features: ["stargate", "ibc-transfer", "no-legacy-stdTx", "ibc-go"],
+    features: ["ibc-transfer", "ibc-go", "cosmwasm"],
     chainSymbolImageUrl: "https://dhj8dql1kzq2v.cloudfront.net/white/osmo.png",
     txExplorer: {
       name: "Mintscan",
@@ -114,9 +113,9 @@ export const EmbedChainInfos: AppChainInfo[] = [
     },
   },
   {
-    rpc: "https://rpc-secret.keplr.app",
-    rest: "https://lcd-secret.keplr.app",
-    chainId: "secret-3",
+    rpc: "https://rpc-secret.stream-wallet.app",
+    rest: "https://lcd-secret.stream-wallet.app",
+    chainId: "secret-4",
     chainName: "Secret Network",
     stakeCurrency: {
       coinDenom: "SCRT",
@@ -150,22 +149,22 @@ export const EmbedChainInfos: AppChainInfo[] = [
         coinDecimals: 6,
         coinGeckoId: "secret",
         coinImageUrl: "https://dhj8dql1kzq2v.cloudfront.net/white/secret.png",
+        gasPriceStep: {
+          low: 0.2,
+          average: 0.25,
+          high: 0.3,
+        },
       },
     ],
     coinType: 529,
-    gasPriceStep: {
-      low: 0.1,
-      average: 0.25,
-      high: 0.3,
-    },
     chainSymbolImageUrl:
       "https://dhj8dql1kzq2v.cloudfront.net/white/secret.png",
     features: ["secretwasm"],
     hideInUI: true,
   },
   {
-    rpc: "https://rpc-akash.keplr.app",
-    rest: "https://lcd-akash.keplr.app",
+    rpc: "https://rpc-akash.stream-wallet.app",
+    rest: "https://lcd-akash.stream-wallet.app",
     chainId: "akashnet-2",
     chainName: "Akash",
     stakeCurrency: {
@@ -198,12 +197,12 @@ export const EmbedChainInfos: AppChainInfo[] = [
       },
     ],
     chainSymbolImageUrl: "https://dhj8dql1kzq2v.cloudfront.net/white/akash.png",
-    features: ["stargate", "ibc-transfer"],
+    features: ["ibc-transfer"],
     hideInUI: true,
   },
   {
-    rpc: "https://rpc-crypto-org.keplr.app",
-    rest: "https://lcd-crypto-org.keplr.app",
+    rpc: "https://rpc-crypto-org.stream-wallet.app",
+    rest: "https://lcd-crypto-org.stream-wallet.app",
     chainId: "crypto-org-chain-mainnet-1",
     chainName: "Crypto.org",
     stakeCurrency: {
@@ -216,7 +215,14 @@ export const EmbedChainInfos: AppChainInfo[] = [
     bip44: {
       coinType: 394,
     },
-    bech32Config: Bech32Address.defaultBech32Config("cro"),
+    bech32Config: {
+      bech32PrefixAccAddr: "cro",
+      bech32PrefixAccPub: "cropub",
+      bech32PrefixValAddr: "crocncl",
+      bech32PrefixValPub: "crocnclpub",
+      bech32PrefixConsAddr: "crocnclcons",
+      bech32PrefixConsPub: "crocnclconspub",
+    },
     currencies: [
       {
         coinDenom: "CRO",
@@ -235,21 +241,21 @@ export const EmbedChainInfos: AppChainInfo[] = [
         coinGeckoId: "crypto-com-chain",
         coinImageUrl:
           "https://dhj8dql1kzq2v.cloudfront.net/white/crypto-org.png",
+        gasPriceStep: {
+          low: 0.025,
+          average: 0.03,
+          high: 0.04,
+        },
       },
     ],
-    gasPriceStep: {
-      low: 0.025,
-      average: 0.03,
-      high: 0.04,
-    },
     chainSymbolImageUrl:
       "https://dhj8dql1kzq2v.cloudfront.net/white/crypto-org.png",
-    features: ["stargate", "ibc-transfer"],
+    features: ["ibc-transfer"],
     hideInUI: true,
   },
   {
-    rpc: "https://rpc-iov.keplr.app",
-    rest: "https://lcd-iov.keplr.app",
+    rpc: "https://rpc-iov.stream-wallet.app",
+    rest: "https://lcd-iov.stream-wallet.app",
     chainId: "iov-mainnet-ibc",
     chainName: "Starname",
     stakeCurrency: {
@@ -279,21 +285,21 @@ export const EmbedChainInfos: AppChainInfo[] = [
         coinDecimals: 6,
         coinGeckoId: "starname",
         coinImageUrl: "https://dhj8dql1kzq2v.cloudfront.net/white/starname.png",
+        gasPriceStep: {
+          low: 1,
+          average: 2,
+          high: 3,
+        },
       },
     ],
-    gasPriceStep: {
-      low: 1,
-      average: 2,
-      high: 3,
-    },
     chainSymbolImageUrl:
       "https://dhj8dql1kzq2v.cloudfront.net/white/starname.png",
-    features: ["stargate", "ibc-transfer"],
+    features: ["ibc-transfer"],
     hideInUI: true,
   },
   {
-    rpc: "https://rpc-sifchain.keplr.app",
-    rest: "https://lcd-sifchain.keplr.app/",
+    rpc: "https://rpc-sifchain.stream-wallet.app",
+    rest: "https://lcd-sifchain.stream-wallet.app/",
     chainId: "sifchain-1",
     chainName: "Sifchain",
     stakeCurrency: {
@@ -354,6 +360,13 @@ export const EmbedChainInfos: AppChainInfo[] = [
         coinDenom: "Decentraland",
         coinMinimalDenom: "cmana",
         coinDecimals: 18,
+      },
+      {
+        coinDenom: "Stream Protocol",
+        coinMinimalDenom: "cstrm",
+        coinDecimals: 18,
+        coinGeckoId: "streamprotocol",
+        coinImageUrl: "https://i.imgur.com/pyo8B59.png",
       },
       {
         coinDenom: "Loopring",
@@ -598,23 +611,23 @@ export const EmbedChainInfos: AppChainInfo[] = [
         coinDecimals: 18,
         coinGeckoId: "sifchain",
         coinImageUrl: "https://dhj8dql1kzq2v.cloudfront.net/white/sifchain.png",
+        gasPriceStep: {
+          low: 500000000000,
+          average: 1000000000000,
+          high: 2000000000000,
+        },
       },
     ],
-    gasPriceStep: {
-      low: 500000000000,
-      average: 1000000000000,
-      high: 2000000000000,
-    },
     chainSymbolImageUrl:
       "https://dhj8dql1kzq2v.cloudfront.net/white/sifchain.png",
-    features: ["stargate"],
+    features: [],
     hideInUI: true,
   },
   {
-    rpc: "https://rpc-certik.keplr.app",
-    rest: "https://lcd-certik.keplr.app",
+    rpc: "https://rpc-certik.stream-wallet.app",
+    rest: "https://lcd-certik.stream-wallet.app",
     chainId: "shentu-2.2",
-    chainName: "Certik",
+    chainName: "Shentu",
     stakeCurrency: {
       coinDenom: "CTK",
       coinMinimalDenom: "uctk",
@@ -641,12 +654,12 @@ export const EmbedChainInfos: AppChainInfo[] = [
         coinGeckoId: "certik",
       },
     ],
-    features: ["stargate", "ibc-transfer", "no-legacy-stdTx", "ibc-go"],
+    features: ["ibc-transfer", "ibc-go"],
     hideInUI: true,
   },
   {
-    rpc: "https://rpc-iris.keplr.app",
-    rest: "https://lcd-iris.keplr.app",
+    rpc: "https://rpc-iris.stream-wallet.app",
+    rest: "https://lcd-iris.stream-wallet.app",
     chainId: "irishub-1",
     chainName: "IRISnet",
     stakeCurrency: {
@@ -664,7 +677,14 @@ export const EmbedChainInfos: AppChainInfo[] = [
         coinType: 566,
       },
     ],
-    bech32Config: Bech32Address.defaultBech32Config("iaa"),
+    bech32Config: {
+      bech32PrefixAccAddr: "iaa",
+      bech32PrefixAccPub: "iap",
+      bech32PrefixValAddr: "iva",
+      bech32PrefixValPub: "ivp",
+      bech32PrefixConsAddr: "ica",
+      bech32PrefixConsPub: "icp",
+    },
     currencies: [
       {
         coinDenom: "IRIS",
@@ -681,20 +701,20 @@ export const EmbedChainInfos: AppChainInfo[] = [
         coinDecimals: 6,
         coinGeckoId: "iris-network",
         coinImageUrl: "https://dhj8dql1kzq2v.cloudfront.net/white/iris.png",
+        gasPriceStep: {
+          low: 0.2,
+          average: 0.3,
+          high: 0.4,
+        },
       },
     ],
-    gasPriceStep: {
-      low: 0.2,
-      average: 0.3,
-      high: 0.4,
-    },
     chainSymbolImageUrl: "https://dhj8dql1kzq2v.cloudfront.net/white/iris.png",
-    features: ["stargate", "ibc-transfer"],
+    features: ["ibc-transfer"],
     hideInUI: true,
   },
   {
-    rpc: "https://rpc-regen.keplr.app",
-    rest: "https://lcd-regen.keplr.app",
+    rpc: "https://rpc-regen.stream-wallet.app",
+    rest: "https://lcd-regen.stream-wallet.app",
     chainId: "regen-1",
     chainName: "Regen",
     stakeCurrency: {
@@ -727,11 +747,11 @@ export const EmbedChainInfos: AppChainInfo[] = [
       },
     ],
     chainSymbolImageUrl: "https://dhj8dql1kzq2v.cloudfront.net/white/regen.png",
-    features: ["stargate", "ibc-transfer", "no-legacy-stdTx", "ibc-go"],
+    features: ["ibc-transfer", "ibc-go"],
   },
   {
-    rpc: "https://rpc-juno.keplr.app",
-    rest: "https://lcd-juno.keplr.app",
+    rpc: "https://rpc-juno.stream-wallet.app",
+    rest: "https://lcd-juno.stream-wallet.app",
     chainId: "juno-1",
     chainName: "Juno",
     stakeCurrency: {
@@ -761,20 +781,14 @@ export const EmbedChainInfos: AppChainInfo[] = [
         coinDecimals: 6,
         coinGeckoId: "juno-network",
         coinImageUrl: "https://dhj8dql1kzq2v.cloudfront.net/white/juno.png",
+        gasPriceStep: {
+          low: 0.001,
+          average: 0.0025,
+          high: 0.004,
+        },
       },
     ],
-    gasPriceStep: {
-      low: 0.001,
-      average: 0.0025,
-      high: 0.004,
-    },
-    features: [
-      "stargate",
-      "no-legacy-stdTx",
-      "cosmwasm",
-      "ibc-transfer",
-      "ibc-go",
-    ],
+    features: ["cosmwasm", "ibc-transfer", "ibc-go", "wasmd_0.24+"],
     chainSymbolImageUrl: "https://dhj8dql1kzq2v.cloudfront.net/white/juno.png",
     txExplorer: {
       name: "Mintscan",
@@ -782,8 +796,8 @@ export const EmbedChainInfos: AppChainInfo[] = [
     },
   },
   {
-    rpc: "https://rpc-stargaze.keplr.app",
-    rest: "https://lcd-stargaze.keplr.app",
+    rpc: "https://rpc-stargaze.stream-wallet.app",
+    rest: "https://lcd-stargaze.stream-wallet.app",
     chainId: "stargaze-1",
     chainName: "Stargaze",
     stakeCurrency: {
@@ -815,7 +829,7 @@ export const EmbedChainInfos: AppChainInfo[] = [
         coinImageUrl: "https://dhj8dql1kzq2v.cloudfront.net/white/stargaze.png",
       },
     ],
-    features: ["stargate", "no-legacy-stdTx", "ibc-transfer", "ibc-go"],
+    features: ["ibc-transfer", "ibc-go"],
     chainSymbolImageUrl:
       "https://dhj8dql1kzq2v.cloudfront.net/white/stargaze.png",
     txExplorer: {
@@ -824,8 +838,8 @@ export const EmbedChainInfos: AppChainInfo[] = [
     },
   },
   {
-    rpc: "https://rpc-persistence.keplr.app",
-    rest: "https://lcd-persistence.keplr.app",
+    rpc: "https://rpc-persistence.stream-wallet.app",
+    rest: "https://lcd-persistence.stream-wallet.app",
     chainId: "core-1",
     chainName: "Persistence",
     stakeCurrency: {
@@ -837,8 +851,13 @@ export const EmbedChainInfos: AppChainInfo[] = [
         "https://dhj8dql1kzq2v.cloudfront.net/white/persistence.png",
     },
     bip44: {
-      coinType: 750,
+      coinType: 118,
     },
+    alternativeBIP44s: [
+      {
+        coinType: 750,
+      },
+    ],
     bech32Config: Bech32Address.defaultBech32Config("persistence"),
     currencies: [
       {
@@ -858,26 +877,27 @@ export const EmbedChainInfos: AppChainInfo[] = [
         coinGeckoId: "persistence",
         coinImageUrl:
           "https://dhj8dql1kzq2v.cloudfront.net/white/persistence.png",
+        gasPriceStep: {
+          low: 0,
+          average: 0.025,
+          high: 0.04,
+        },
       },
     ],
-    gasPriceStep: {
-      low: 0,
-      average: 0.025,
-      high: 0.04,
-    },
     chainSymbolImageUrl:
       "https://dhj8dql1kzq2v.cloudfront.net/white/persistence.png",
-    features: ["stargate", "ibc-transfer"],
+    features: ["ibc-transfer", "ibc-go"],
   },
   {
-    rpc: "https://rpc-axelar.keplr.app",
-    rest: "https://lcd-axelar.keplr.app",
+    rpc: "https://rpc-axelar.stream-wallet.app",
+    rest: "https://lcd-axelar.stream-wallet.app",
     chainId: "axelar-dojo-1",
     chainName: "Axelar",
     stakeCurrency: {
       coinDenom: "AXL",
       coinMinimalDenom: "uaxl",
       coinDecimals: 6,
+      coinGeckoId: "axelar",
       coinImageUrl: "https://dhj8dql1kzq2v.cloudfront.net/white/axelar.png",
     },
     bip44: {
@@ -889,7 +909,116 @@ export const EmbedChainInfos: AppChainInfo[] = [
         coinDenom: "AXL",
         coinMinimalDenom: "uaxl",
         coinDecimals: 6,
+        coinGeckoId: "axelar",
         coinImageUrl: "https://dhj8dql1kzq2v.cloudfront.net/white/axelar.png",
+      },
+      {
+        coinDenom: "WETH",
+        coinMinimalDenom: "weth-wei",
+        coinDecimals: 18,
+        coinGeckoId: "weth",
+      },
+      {
+        coinDenom: "USDC",
+        coinMinimalDenom: "uusdc",
+        coinDecimals: 6,
+        coinGeckoId: "usd-coin",
+      },
+      {
+        coinDenom: "FRAX",
+        coinMinimalDenom: "frax-wei",
+        coinDecimals: 18,
+        coinGeckoId: "frax",
+      },
+      {
+        coinDenom: "DAI",
+        coinMinimalDenom: "dai-wei",
+        coinDecimals: 18,
+        coinGeckoId: "dai",
+      },
+      {
+        coinDenom: "USDT",
+        coinMinimalDenom: "uusdt",
+        coinDecimals: 6,
+        coinGeckoId: "tether",
+      },
+      {
+        coinDenom: "WBTC",
+        coinMinimalDenom: "wbtc-satoshi",
+        coinDecimals: 8,
+        coinGeckoId: "wrapped-bitcoin",
+      },
+      {
+        coinDenom: "LINK",
+        coinMinimalDenom: "link-wei",
+        coinDecimals: 18,
+        coinGeckoId: "chainlink",
+      },
+      {
+        coinDenom: "AAVE",
+        coinMinimalDenom: "aave-wei",
+        coinDecimals: 18,
+        coinGeckoId: "aave",
+      },
+      {
+        coinDenom: "APE",
+        coinMinimalDenom: "ape-wei",
+        coinDecimals: 18,
+        coinGeckoId: "apecoin",
+      },
+      {
+        coinDenom: "AXS",
+        coinMinimalDenom: "axs-wei",
+        coinDecimals: 18,
+        coinGeckoId: "axie-infinity",
+      },
+      {
+        coinDenom: "MKR",
+        coinMinimalDenom: "mkr-wei",
+        coinDecimals: 18,
+        coinGeckoId: "maker",
+      },
+      {
+        coinDenom: "RAI",
+        coinMinimalDenom: "rai-wei",
+        coinDecimals: 18,
+        coinGeckoId: "rai",
+      },
+      {
+        coinDenom: "SHIB",
+        coinMinimalDenom: "shib-wei",
+        coinDecimals: 18,
+        coinGeckoId: "shiba-inu",
+      },
+      {
+        coinDenom: "stETH",
+        coinMinimalDenom: "steth-wei",
+        coinDecimals: 18,
+        coinGeckoId: "staked-ether",
+      },
+      {
+        coinDenom: "UNI",
+        coinMinimalDenom: "uni-wei",
+        coinDecimals: 18,
+        coinGeckoId: "uniswap",
+      },
+      {
+        coinDenom: "XCN",
+        coinMinimalDenom: "xcn-wei",
+        coinDecimals: 18,
+        coinGeckoId: "chain-2",
+      },
+      {
+        coinDenom: "WGLMR",
+        coinMinimalDenom: "wglmr-wei",
+        coinDecimals: 18,
+        coinGeckoId: "wrapped-moonbeam",
+      },
+      {
+        coinDenom: "DOT",
+        coinMinimalDenom: "dot-planck",
+        coinDecimals: 10,
+        coinGeckoId: "polkadot",
       },
     ],
     feeCurrencies: [
@@ -897,21 +1026,22 @@ export const EmbedChainInfos: AppChainInfo[] = [
         coinDenom: "AXL",
         coinMinimalDenom: "uaxl",
         coinDecimals: 6,
+        coinGeckoId: "axelar",
         coinImageUrl: "https://dhj8dql1kzq2v.cloudfront.net/white/axelar.png",
+        gasPriceStep: {
+          low: 0.007,
+          average: 0.007,
+          high: 0.01,
+        },
       },
     ],
-    gasPriceStep: {
-      low: 0.05,
-      average: 0.075,
-      high: 0.1,
-    },
-    features: ["stargate", "ibc-transfer", "no-legacy-stdTx", "ibc-go"],
+    features: ["ibc-transfer", "ibc-go", "axelar-evm-bridge"],
     chainSymbolImageUrl:
       "https://dhj8dql1kzq2v.cloudfront.net/white/axelar.png",
   },
   {
-    rpc: "https://rpc-sommelier.keplr.app",
-    rest: "https://lcd-sommelier.keplr.app",
+    rpc: "https://rpc-sommelier.stream-wallet.app",
+    rest: "https://lcd-sommelier.stream-wallet.app",
     chainId: "sommelier-3",
     chainName: "Sommelier",
     stakeCurrency: {
@@ -943,12 +1073,12 @@ export const EmbedChainInfos: AppChainInfo[] = [
         coinImageUrl: "https://dhj8dql1kzq2v.cloudfront.net/white/somm.png",
       },
     ],
-    features: ["stargate", "ibc-transfer", "no-legacy-stdTx", "ibc-go"],
+    features: ["ibc-transfer", "ibc-go"],
     chainSymbolImageUrl: "https://dhj8dql1kzq2v.cloudfront.net/white/somm.png",
   },
   {
-    rpc: "https://rpc-umee.keplr.app",
-    rest: "https://lcd-umee.keplr.app",
+    rpc: "https://rpc-umee.stream-wallet.app",
+    rest: "https://lcd-umee.stream-wallet.app",
     chainId: "umee-1",
     chainName: "Umee",
     stakeCurrency: {
@@ -975,14 +1105,110 @@ export const EmbedChainInfos: AppChainInfo[] = [
         coinMinimalDenom: "uumee",
         coinDecimals: 6,
         coinImageUrl: "https://dhj8dql1kzq2v.cloudfront.net/white/umee.png",
+        gasPriceStep: {
+          low: 0.05,
+          average: 0.06,
+          high: 0.1,
+        },
       },
     ],
-    features: ["stargate", "ibc-transfer", "no-legacy-stdTx", "ibc-go"],
+    features: ["ibc-transfer", "ibc-go"],
     chainSymbolImageUrl: "https://dhj8dql1kzq2v.cloudfront.net/white/umee.png",
   },
   {
-    rpc: "https://rpc-sentinel.keplr.app",
-    rest: "https://lcd-sentinel.keplr.app",
+    rpc: "https://rpc-agoric.stream-wallet.app",
+    rest: "https://lcd-agoric.stream-wallet.app",
+    chainId: "agoric-3",
+    chainName: "Agoric",
+    stakeCurrency: {
+      coinDenom: "BLD",
+      coinMinimalDenom: "ubld",
+      coinDecimals: 6,
+      coinGeckoId: "agoric",
+      coinImageUrl: "https://dhj8dql1kzq2v.cloudfront.net/white/agoric.png",
+    },
+    bip44: {
+      coinType: 564,
+    },
+    bech32Config: Bech32Address.defaultBech32Config("agoric"),
+    currencies: [
+      {
+        coinDenom: "BLD",
+        coinMinimalDenom: "ubld",
+        coinDecimals: 6,
+        coinGeckoId: "agoric",
+        coinImageUrl: "https://dhj8dql1kzq2v.cloudfront.net/white/agoric.png",
+      },
+      {
+        coinDenom: "IST",
+        coinMinimalDenom: "uist",
+        coinDecimals: 6,
+      },
+    ],
+    feeCurrencies: [
+      {
+        coinDenom: "BLD",
+        coinMinimalDenom: "ubld",
+        coinDecimals: 6,
+        coinGeckoId: "agoric",
+        gasPriceStep: {
+          low: 0.012,
+          average: 0.024,
+          high: 0.071,
+        },
+      },
+      {
+        coinDenom: "IST",
+        coinMinimalDenom: "uist",
+        coinDecimals: 6,
+        gasPriceStep: {
+          low: 0.0034,
+          average: 0.007,
+          high: 0.02,
+        },
+      },
+    ],
+    features: ["ibc-go"],
+    chainSymbolImageUrl:
+      "https://dhj8dql1kzq2v.cloudfront.net/white/agoric.png",
+  },
+  {
+    rpc: "https://rpc-gravity-bridge.stream-wallet.app",
+    rest: "https://lcd-gravity-bridge.stream-wallet.app",
+    chainId: "gravity-bridge-3",
+    chainName: "Gravity Bridge",
+    stakeCurrency: {
+      coinDenom: "GRAV",
+      coinMinimalDenom: "ugraviton",
+      coinDecimals: 6,
+      coinImageUrl: "https://dhj8dql1kzq2v.cloudfront.net/white/grav.png",
+    },
+    bip44: {
+      coinType: 118,
+    },
+    bech32Config: Bech32Address.defaultBech32Config("gravity"),
+    currencies: [
+      {
+        coinDenom: "GRAV",
+        coinMinimalDenom: "ugraviton",
+        coinDecimals: 6,
+        coinImageUrl: "https://dhj8dql1kzq2v.cloudfront.net/white/grav.png",
+      },
+    ],
+    feeCurrencies: [
+      {
+        coinDenom: "GRAV",
+        coinMinimalDenom: "ugraviton",
+        coinDecimals: 6,
+        coinImageUrl: "https://dhj8dql1kzq2v.cloudfront.net/white/grav.png",
+      },
+    ],
+    features: ["ibc-transfer", "ibc-go"],
+    chainSymbolImageUrl: "https://dhj8dql1kzq2v.cloudfront.net/white/grav.png",
+  },
+  {
+    rpc: "https://rpc-sentinel.stream-wallet.app",
+    rest: "https://lcd-sentinel.stream-wallet.app",
     chainId: "sentinelhub-2",
     chainName: "Sentinel",
     stakeCurrency: {
@@ -994,12 +1220,12 @@ export const EmbedChainInfos: AppChainInfo[] = [
     },
     walletUrl:
       process.env.NODE_ENV === "production"
-        ? "https://wallet.keplr.app/#/sentinel/stake"
-        : "http://localhost:8081/#/sentinel/stake",
+        ? "https://wallet.streamprotocol.app/chains/sentinel"
+        : "http://localhost:8081/chains/sentinel",
     walletUrlForStaking:
       process.env.NODE_ENV === "production"
-        ? "https://wallet.keplr.app/#/sentinel/stake"
-        : "http://localhost:8081/#/sentinel/stake",
+        ? "https://wallet.streamprotocol.app/chains/sentinel"
+        : "http://localhost:8081/chains/sentinel",
     bip44: {
       coinType: 118,
     },
@@ -1020,21 +1246,21 @@ export const EmbedChainInfos: AppChainInfo[] = [
         coinDecimals: 6,
         coinGeckoId: "sentinel",
         coinImageUrl: "https://dhj8dql1kzq2v.cloudfront.net/white/sentinel.png",
+        gasPriceStep: {
+          low: 0.1,
+          average: 0.25,
+          high: 0.4,
+        },
       },
     ],
-    gasPriceStep: {
-      low: 0.1,
-      average: 0.25,
-      high: 0.4,
-    },
     chainSymbolImageUrl:
       "https://dhj8dql1kzq2v.cloudfront.net/white/sentinel.png",
-    features: ["stargate", "ibc-transfer"],
+    features: ["ibc-transfer"],
     hideInUI: true,
   },
   {
-    rpc: "https://rpc-impacthub.keplr.app",
-    rest: "https://lcd-impacthub.keplr.app",
+    rpc: "https://rpc-impacthub.stream-wallet.app",
+    rest: "https://lcd-impacthub.stream-wallet.app",
     chainId: "impacthub-3",
     chainName: "ixo",
     stakeCurrency: {
@@ -1045,12 +1271,12 @@ export const EmbedChainInfos: AppChainInfo[] = [
     },
     walletUrl:
       process.env.NODE_ENV === "production"
-        ? "https://wallet.keplr.app/#/ixo/stake"
-        : "http://localhost:8081/#/ixo/stake",
+        ? "https://wallet.streamprotocol.app/chains/ixo"
+        : "http://localhost:8081/chains/ixo",
     walletUrlForStaking:
       process.env.NODE_ENV === "production"
-        ? "https://wallet.keplr.app/#/ixo/stake"
-        : "http://localhost:8081/#/ixo/stake",
+        ? "https://wallet.streamprotocol.app/chains/ixo"
+        : "http://localhost:8081/chains/ixo",
     bip44: {
       coinType: 118,
     },
@@ -1072,12 +1298,12 @@ export const EmbedChainInfos: AppChainInfo[] = [
       },
     ],
     chainSymbolImageUrl: "https://dhj8dql1kzq2v.cloudfront.net/white/ixo.png",
-    features: ["stargate"],
+    features: [],
     hideInUI: true,
   },
   {
-    rpc: "https://rpc-emoney.keplr.app",
-    rest: "https://lcd-emoney.keplr.app",
+    rpc: "https://rpc-emoney.stream-wallet.app",
+    rest: "https://lcd-emoney.stream-wallet.app",
     chainId: "emoney-3",
     chainName: "e-Money",
     stakeCurrency: {
@@ -1089,12 +1315,12 @@ export const EmbedChainInfos: AppChainInfo[] = [
     },
     walletUrl:
       process.env.NODE_ENV === "production"
-        ? "https://wallet.keplr.app/#/emoney/stake"
-        : "http://localhost:8080/#/emoney/stake",
+        ? "https://wallet.streamprotocol.app/chains/e-money"
+        : "http://localhost:8080/chains/e-money",
     walletUrlForStaking:
       process.env.NODE_ENV === "production"
-        ? "https://wallet.keplr.app/#/emoney/stake"
-        : "http://localhost:8080/#/emoney/stake",
+        ? "https://wallet.streamprotocol.app/chains/e-money"
+        : "http://localhost:8080/chains/e-money",
     bip44: {
       coinType: 118,
     },
@@ -1111,6 +1337,31 @@ export const EmbedChainInfos: AppChainInfo[] = [
         coinDenom: "EEUR",
         coinMinimalDenom: "eeur",
         coinDecimals: 6,
+        coinGeckoId: "e-money-eur",
+        coinImageUrl: "https://dhj8dql1kzq2v.cloudfront.net/white/ngm.png",
+      },
+      {
+        coinDenom: "ECHF",
+        coinMinimalDenom: "echf",
+        coinDecimals: 6,
+        coinImageUrl: "https://dhj8dql1kzq2v.cloudfront.net/white/ngm.png",
+      },
+      {
+        coinDenom: "ESEK",
+        coinMinimalDenom: "esek",
+        coinDecimals: 6,
+        coinImageUrl: "https://dhj8dql1kzq2v.cloudfront.net/white/ngm.png",
+      },
+      {
+        coinDenom: "ENOK",
+        coinMinimalDenom: "enok",
+        coinDecimals: 6,
+        coinImageUrl: "https://dhj8dql1kzq2v.cloudfront.net/white/ngm.png",
+      },
+      {
+        coinDenom: "EDKK",
+        coinMinimalDenom: "edkk",
+        coinDecimals: 6,
         coinImageUrl: "https://dhj8dql1kzq2v.cloudfront.net/white/ngm.png",
       },
     ],
@@ -1121,20 +1372,76 @@ export const EmbedChainInfos: AppChainInfo[] = [
         coinDecimals: 6,
         coinGeckoId: "e-money",
         coinImageUrl: "https://dhj8dql1kzq2v.cloudfront.net/white/ngm.png",
+        gasPriceStep: {
+          low: 1,
+          average: 1,
+          high: 1,
+        },
+      },
+      {
+        coinDenom: "EEUR",
+        coinMinimalDenom: "eeur",
+        coinDecimals: 6,
+        coinGeckoId: "e-money-eur",
+        coinImageUrl: "https://dhj8dql1kzq2v.cloudfront.net/white/ngm.png",
+        gasPriceStep: {
+          low: 1,
+          average: 1,
+          high: 1,
+        },
+      },
+      {
+        coinDenom: "ECHF",
+        coinMinimalDenom: "echf",
+        coinDecimals: 6,
+        coinImageUrl: "https://dhj8dql1kzq2v.cloudfront.net/white/ngm.png",
+        gasPriceStep: {
+          low: 1,
+          average: 1,
+          high: 1,
+        },
+      },
+      {
+        coinDenom: "ESEK",
+        coinMinimalDenom: "esek",
+        coinDecimals: 6,
+        coinImageUrl: "https://dhj8dql1kzq2v.cloudfront.net/white/ngm.png",
+        gasPriceStep: {
+          low: 1,
+          average: 1,
+          high: 1,
+        },
+      },
+      {
+        coinDenom: "ENOK",
+        coinMinimalDenom: "enok",
+        coinDecimals: 6,
+        coinImageUrl: "https://dhj8dql1kzq2v.cloudfront.net/white/ngm.png",
+        gasPriceStep: {
+          low: 1,
+          average: 1,
+          high: 1,
+        },
+      },
+      {
+        coinDenom: "EDKK",
+        coinMinimalDenom: "edkk",
+        coinDecimals: 6,
+        coinImageUrl: "https://dhj8dql1kzq2v.cloudfront.net/white/ngm.png",
+        gasPriceStep: {
+          low: 1,
+          average: 1,
+          high: 1,
+        },
       },
     ],
-    gasPriceStep: {
-      low: 1,
-      average: 1,
-      high: 1,
-    },
     chainSymbolImageUrl: "https://dhj8dql1kzq2v.cloudfront.net/white/ngm.png",
-    features: ["stargate", "ibc-transfer"],
+    features: ["ibc-transfer"],
     hideInUI: true,
   },
   {
-    rpc: "https://rpc-microtick.keplr.app",
-    rest: "https://lcd-microtick.keplr.app",
+    rpc: "https://rpc-microtick.stream-wallet.app",
+    rest: "https://lcd-microtick.stream-wallet.app",
     chainId: "microtick-1",
     chainName: "Microtick",
     stakeCurrency: {
@@ -1160,12 +1467,12 @@ export const EmbedChainInfos: AppChainInfo[] = [
         coinDecimals: 6,
       },
     ],
-    features: ["stargate", "ibc-transfer"],
+    features: ["ibc-transfer"],
     hideInUI: true,
   },
   {
-    rpc: "https://rpc-columbus.keplr.app",
-    rest: "https://lcd-columbus.keplr.app",
+    rpc: "https://rpc-columbus.stream-wallet.app",
+    rest: "https://lcd-columbus.stream-wallet.app",
     chainId: "columbus-5",
     chainName: "Terra",
     stakeCurrency: {
@@ -1204,20 +1511,25 @@ export const EmbedChainInfos: AppChainInfo[] = [
         coinMinimalDenom: "uluna",
         coinDecimals: 6,
         coinGeckoId: "terra-luna",
+        gasPriceStep: {
+          low: 0.015,
+          average: 0.015,
+          high: 0.015,
+        },
       },
       {
         coinDenom: "UST",
         coinMinimalDenom: "uusd",
         coinDecimals: 6,
         coinGeckoId: "terrausd",
+        gasPriceStep: {
+          low: 0.015,
+          average: 0.015,
+          high: 0.015,
+        },
       },
     ],
-    gasPriceStep: {
-      low: 0.015,
-      average: 0.015,
-      high: 0.015,
-    },
-    features: ["stargate", "ibc-transfer", "no-legacy-stdTx"],
+    features: ["ibc-transfer"],
     hideInUI: true,
   },
   {
@@ -1234,7 +1546,7 @@ export const EmbedChainInfos: AppChainInfo[] = [
     bip44: {
       coinType: 118,
     },
-    bech32Config: Bech32Address.defaultBech32Config("cosmos"),
+    bech32Config: Bech32Address.defaultBech32Config("like"),
     currencies: [
       {
         coinDenom: "LIKE",
@@ -1251,38 +1563,7 @@ export const EmbedChainInfos: AppChainInfo[] = [
         coinGeckoId: "likecoin",
       },
     ],
-    features: ["stargate", "ibc-transfer"],
-    hideInUI: true,
-  },
-  {
-    rpc: "https://rpc-impacthub.keplr.app",
-    rest: "https://lcd-impacthub.keplr.app",
-    chainId: "impacthub-3",
-    chainName: "IXO",
-    stakeCurrency: {
-      coinDenom: "IXO",
-      coinMinimalDenom: "uixo",
-      coinDecimals: 6,
-    },
-    bip44: {
-      coinType: 118,
-    },
-    bech32Config: Bech32Address.defaultBech32Config("ixo"),
-    currencies: [
-      {
-        coinDenom: "IXO",
-        coinMinimalDenom: "uixo",
-        coinDecimals: 6,
-      },
-    ],
-    feeCurrencies: [
-      {
-        coinDenom: "IXO",
-        coinMinimalDenom: "uixo",
-        coinDecimals: 6,
-      },
-    ],
-    features: ["stargate", "ibc-transfer"],
+    features: ["ibc-transfer", "ibc-go"],
     hideInUI: true,
   },
   {
@@ -1316,7 +1597,7 @@ export const EmbedChainInfos: AppChainInfo[] = [
         coinGeckoId: "bitcanna",
       },
     ],
-    features: ["stargate", "ibc-transfer", "no-legacy-stdTx"],
+    features: ["ibc-transfer"],
     hideInUI: true,
   },
   {
@@ -1347,7 +1628,7 @@ export const EmbedChainInfos: AppChainInfo[] = [
         coinDecimals: 6,
       },
     ],
-    features: ["stargate", "ibc-transfer"],
+    features: ["ibc-transfer"],
     hideInUI: true,
   },
   {
@@ -1378,7 +1659,7 @@ export const EmbedChainInfos: AppChainInfo[] = [
         coinDecimals: 6,
       },
     ],
-    features: ["stargate", "ibc-transfer"],
+    features: ["ibc-transfer"],
     hideInUI: true,
   },
   {
@@ -1410,14 +1691,14 @@ export const EmbedChainInfos: AppChainInfo[] = [
         coinMinimalDenom: "umed",
         coinDecimals: 6,
         coinGeckoId: "medibloc",
+        gasPriceStep: {
+          low: 5,
+          average: 7,
+          high: 9,
+        },
       },
     ],
-    gasPriceStep: {
-      low: 5,
-      average: 7,
-      high: 9,
-    },
-    features: ["stargate", "ibc-transfer"],
+    features: ["ibc-transfer"],
     hideInUI: true,
   },
   {
@@ -1448,7 +1729,7 @@ export const EmbedChainInfos: AppChainInfo[] = [
         coinDecimals: 0,
       },
     ],
-    features: ["stargate", "ibc-transfer", "no-legacy-stdTx", "ibc-go"],
+    features: ["ibc-transfer", "ibc-go"],
     hideInUI: true,
   },
   {
@@ -1479,7 +1760,7 @@ export const EmbedChainInfos: AppChainInfo[] = [
         coinDecimals: 6,
       },
     ],
-    features: ["stargate", "ibc-transfer", "no-legacy-stdTx", "ibc-go"],
+    features: ["ibc-transfer", "ibc-go"],
     hideInUI: true,
   },
   {
@@ -1508,14 +1789,14 @@ export const EmbedChainInfos: AppChainInfo[] = [
         coinDenom: "CHEQ",
         coinMinimalDenom: "ncheq",
         coinDecimals: 9,
+        gasPriceStep: {
+          low: 25,
+          average: 30,
+          high: 50,
+        },
       },
     ],
-    gasPriceStep: {
-      low: 25,
-      average: 30,
-      high: 50,
-    },
-    features: ["stargate", "ibc-transfer", "no-legacy-stdTx", "ibc-go"],
+    features: ["ibc-transfer", "ibc-go"],
     hideInUI: true,
   },
   {
@@ -1544,14 +1825,14 @@ export const EmbedChainInfos: AppChainInfo[] = [
         coinDenom: "HUAHUA",
         coinMinimalDenom: "uhuahua",
         coinDecimals: 6,
+        gasPriceStep: {
+          low: 0.025,
+          average: 0.03,
+          high: 0.035,
+        },
       },
     ],
-    gasPriceStep: {
-      low: 0.025,
-      average: 0.03,
-      high: 0.035,
-    },
-    features: ["stargate", "ibc-transfer", "no-legacy-stdTx", "ibc-go"],
+    features: ["ibc-transfer", "ibc-go"],
     hideInUI: true,
   },
   {
@@ -1582,7 +1863,7 @@ export const EmbedChainInfos: AppChainInfo[] = [
         coinDecimals: 6,
       },
     ],
-    features: ["stargate", "ibc-transfer", "no-legacy-stdTx", "ibc-go"],
+    features: ["ibc-transfer", "ibc-go"],
     hideInUI: true,
   },
   {
@@ -1616,7 +1897,7 @@ export const EmbedChainInfos: AppChainInfo[] = [
         coinGeckoId: "vidulum",
       },
     ],
-    features: ["stargate", "ibc-transfer", "no-legacy-stdTx", "ibc-go"],
+    features: ["ibc-transfer", "ibc-go"],
     hideInUI: true,
   },
   {
@@ -1650,7 +1931,7 @@ export const EmbedChainInfos: AppChainInfo[] = [
         coinGeckoId: "desmos",
       },
     ],
-    features: ["stargate", "ibc-transfer", "no-legacy-stdTx", "ibc-go"],
+    features: ["ibc-transfer", "ibc-go"],
     hideInUI: true,
   },
   {
@@ -1679,16 +1960,100 @@ export const EmbedChainInfos: AppChainInfo[] = [
         coinDenom: "DIG",
         coinMinimalDenom: "udig",
         coinDecimals: 6,
+        gasPriceStep: {
+          low: 0.025,
+          average: 0.03,
+          high: 0.035,
+        },
       },
     ],
-    gasPriceStep: {
-      low: 0.025,
-      average: 0.03,
-      high: 0.035,
+    features: ["ibc-transfer", "ibc-go"],
+    hideInUI: true,
+  },
+  {
+    rpc: "https://rpc-evmos.stream-wallet.app",
+    rest: "https://lcd-evmos.stream-wallet.app",
+    chainId: "evmos_9001-2",
+    chainName: "Evmos",
+    stakeCurrency: {
+      coinDenom: "EVMOS",
+      coinMinimalDenom: "aevmos",
+      coinDecimals: 18,
+      coinGeckoId: "evmos",
     },
-    features: ["stargate", "ibc-transfer", "no-legacy-stdTx", "ibc-go"],
+    bip44: {
+      coinType: 60,
+    },
+    bech32Config: Bech32Address.defaultBech32Config("evmos"),
+    currencies: [
+      {
+        coinDenom: "EVMOS",
+        coinMinimalDenom: "aevmos",
+        coinDecimals: 18,
+        coinGeckoId: "evmos",
+      },
+    ],
+    feeCurrencies: [
+      {
+        coinDenom: "EVMOS",
+        coinMinimalDenom: "aevmos",
+        coinDecimals: 18,
+        coinGeckoId: "evmos",
+        gasPriceStep: {
+          low: 25000000000,
+          average: 25000000000,
+          high: 40000000000,
+        },
+      },
+    ],
+    features: ["ibc-transfer", "ibc-go", "eth-address-gen", "eth-key-sign"],
+    hideInUI: true,
+  },
+  {
+    rpc: "https://public.api.injective.network",
+    rest: "https://public.lcd.injective.network",
+    chainId: "injective-1",
+    chainName: "Injective",
+    stakeCurrency: {
+      coinDenom: "INJ",
+      coinMinimalDenom: "inj",
+      coinDecimals: 18,
+      coinGeckoId: "injective-protocol",
+    },
+    bip44: {
+      coinType: 60,
+    },
+    bech32Config: Bech32Address.defaultBech32Config("inj"),
+    currencies: [
+      {
+        coinDenom: "INJ",
+        coinMinimalDenom: "inj",
+        coinDecimals: 18,
+        coinGeckoId: "injective-protocol",
+      },
+    ],
+    feeCurrencies: [
+      {
+        coinDenom: "INJ",
+        coinMinimalDenom: "inj",
+        coinDecimals: 18,
+        coinGeckoId: "injective-protocol",
+        gasPriceStep: {
+          low: 0.0005,
+          average: 0.0007,
+          high: 0.0009,
+        },
+      },
+    ],
+    features: ["ibc-transfer", "ibc-go", "eth-address-gen", "eth-key-sign"],
     hideInUI: true,
   },
 ];
 
 export const AmplitudeApiKey = "dbcaf47e30aae5b712bda7f892b2f0c4";
+
+export const CommunityChainInfoRepo = {
+  organizationName: "chainapsis",
+  repoName: "stream-wallet-chain-registry",
+  branchName: "main",
+};

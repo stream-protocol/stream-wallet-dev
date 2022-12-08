@@ -1,22 +1,22 @@
 import {
-  OfflineSigner,
+  Stream,
+  OfflineDirectSigner,
+  OfflineAminoSigner,
   AccountData,
   AminoSignResponse,
   StdSignDoc,
-} from "@cosmjs/launchpad";
-import { Keplr } from "@keplr-wallet/types";
-import { OfflineDirectSigner } from "@cosmjs/proto-signing";
-import { DirectSignResponse } from "@cosmjs/proto-signing/build/signer";
-import { SignDoc } from "@cosmjs/proto-signing/build/codec/cosmos/tx/v1beta1/tx";
+  DirectSignResponse,
+  SignDoc,
+} from "@stream-wallet/types";
 
-export class CosmJSOfflineSignerOnlyAmino implements OfflineSigner {
+export class CosmJSOfflineSignerOnlyAmino implements OfflineAminoSigner {
   constructor(
     protected readonly chainId: string,
-    protected readonly keplr: Keplr
+    protected readonly stream-wallet: Stream
   ) {}
 
   async getAccounts(): Promise<AccountData[]> {
-    const key = await this.keplr.getKey(this.chainId);
+    const key = await this.stream-wallet.getKey(this.chainId);
 
     return [
       {
@@ -36,13 +36,13 @@ export class CosmJSOfflineSignerOnlyAmino implements OfflineSigner {
       throw new Error("Unmatched chain id with the offline signer");
     }
 
-    const key = await this.keplr.getKey(signDoc.chain_id);
+    const key = await this.stream-wallet.getKey(signDoc.chain_id);
 
     if (key.bech32Address !== signerAddress) {
       throw new Error("Unknown signer address");
     }
 
-    return await this.keplr.signAmino(this.chainId, signerAddress, signDoc);
+    return await this.stream-wallet.signAmino(this.chainId, signerAddress, signDoc);
   }
 
   // Fallback function for the legacy cosmjs implementation before the staragte.
@@ -56,12 +56,12 @@ export class CosmJSOfflineSignerOnlyAmino implements OfflineSigner {
 
 export class CosmJSOfflineSigner
   extends CosmJSOfflineSignerOnlyAmino
-  implements OfflineSigner, OfflineDirectSigner {
+  implements OfflineAminoSigner, OfflineDirectSigner {
   constructor(
     protected readonly chainId: string,
-    protected readonly keplr: Keplr
+    protected readonly stream-wallet: Stream
   ) {
-    super(chainId, keplr);
+    super(chainId, stream-wallet);
   }
 
   async signDirect(
@@ -72,12 +72,12 @@ export class CosmJSOfflineSigner
       throw new Error("Unmatched chain id with the offline signer");
     }
 
-    const key = await this.keplr.getKey(signDoc.chainId);
+    const key = await this.stream-wallet.getKey(signDoc.chainId);
 
     if (key.bech32Address !== signerAddress) {
       throw new Error("Unknown signer address");
     }
 
-    return await this.keplr.signDirect(this.chainId, signerAddress, signDoc);
+    return await this.stream-wallet.signDirect(this.chainId, signerAddress, signDoc);
   }
 }

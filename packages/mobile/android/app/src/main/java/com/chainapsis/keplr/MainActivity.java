@@ -1,4 +1,4 @@
-package com.chainapsis.keplr;
+package app.streamprotocol.stream-wallet;
 
 import com.facebook.react.ReactActivity;
 import com.facebook.react.ReactActivityDelegate;

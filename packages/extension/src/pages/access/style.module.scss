@@ -11,12 +11,13 @@
   .paragraph {
     text-align: center;
     padding: 0 24px;
+    overflow-y: auto;
   }
 
   .permission {
     margin-top: 30px;
     font-size: 14px;
-    color: #525f7f;
+    color: #171828;
     text-align: center;
   }
 
@@ -26,7 +27,7 @@
     padding: 0;
     width: fit-content;
     margin: auto;
-    color: #525f7f;
+    color: #171828;
 
     li:before {
       content: "- ";

@@ -1,6 +1,6 @@
 import React, { FunctionComponent, useMemo } from "react";
 import { StyleSheet, View, ViewStyle } from "react-native";
-import { AppCurrency, Currency } from "@keplr-wallet/types";
+import { AppCurrency, Currency } from "@stream-wallet/types";
 import { useStyle } from "../../styles";
 import {
   Circle,
@@ -11,7 +11,7 @@ import {
   Svg,
 } from "react-native-svg";
 import FastImage from "react-native-fast-image";
-import { Hash } from "@keplr-wallet/crypto";
+import { Hash } from "@stream-wallet/crypto";
 import { Buffer } from "buffer/";
 import { VectorCharacter } from "../vector-character";
 
@@ -94,7 +94,7 @@ export const TokenSymbol: FunctionComponent<{
             "overflow-hidden",
             `background-color-profile-${profileColor}` as any,
           ],
-          [isStakeCurrency && "background-color-primary"]
+          [isStakeCurrency && "background-color-blue-400"]
         ),
         propStyle,
       ])}

@@ -1,19 +1,22 @@
 /* eslint-disable react/display-name */
 
-import React, { FunctionComponent, useMemo } from "react";
-import { CoinUtils, Coin } from "@keplr-wallet/unit";
-import { AppCurrency } from "@keplr-wallet/types";
+import React, { FunctionComponent, useEffect, useMemo, useState } from "react";
+import { CoinUtils, Coin } from "@stream-wallet/unit";
+import { AppCurrency, Currency } from "@stream-wallet/types";
 import yaml from "js-yaml";
-import { CoinPrimitive } from "@keplr-wallet/stores";
+import { CoinPrimitive } from "@stream-wallet/stores";
 import { Text } from "react-native";
 import { useStyle } from "../../styles";
-import { Bech32Address } from "@keplr-wallet/cosmos";
+import { Bech32Address } from "@stream-wallet/cosmos";
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import Hypher from "hypher";
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import english from "hyphenation.en-us";
+import { useStore } from "../../stores";
+import { Buffer } from "buffer/";
+import { observer } from "mobx-react-lite";
 
 const h = new Hypher(english);
 
@@ -133,13 +136,20 @@ export interface MsgExecuteContract {
     // eslint-disable-next-line @typescript-eslint/ban-types
     msg: object | string;
     sender: string;
-    sent_funds: [
+    // The field is for wasm message.
+    funds?: [
       {
         amount: string;
         denom: string;
       }
     ];
-    // The bottom two fields are for secret-wasm message.
+    // The bottom fields are for secret-wasm message.
+    sent_funds?: [
+      {
+        amount: string;
+        denom: string;
+      }
+    ];
     callback_code_hash?: string;
     callback_sig?: string | null;
   };
@@ -399,6 +409,138 @@ export function renderMsgVote(proposalId: string, option: string | number) {
   };
 }
 
+export function renderMsgExecuteContract(
+  currencies: Currency[],
+  sentFunds: CoinPrimitive[],
+  _callbackCodeHash: string | undefined,
+  contract: string,
+  // eslint-disable-next-line @typescript-eslint/ban-types
+  msg: object | string
+) {
+  const sent: { amount: string; denom: string }[] = [];
+  for (const coinPrimitive of sentFunds) {
+    const coin = new Coin(coinPrimitive.denom, coinPrimitive.amount);
+    const parsed = CoinUtils.parseDecAndDenomFromCoin(currencies, coin);
+
+    sent.push({
+      amount: clearDecimals(parsed.amount),
+      denom: parsed.denom,
+    });
+  }
+
+  // const isSecretWasm = callbackCodeHash != null;
+
+  return {
+    icon: "fas fa-cog",
+    title: "Execute Wasm Contract",
+    content: (
+      <Text>
+        <Text>
+          <Text>Execute contract </Text>
+          <Text style={{ fontWeight: "bold" }}>
+            {Bech32Address.shortenAddress(contract, 26)}
+          </Text>
+          {sent.length > 0 ? (
+            <Text>
+              <Text> by sending </Text>
+              <Text style={{ fontWeight: "bold" }}>
+                {sent
+                  .map((coin) => {
+                    return `${coin.amount} ${coin.denom}`;
+                  })
+                  .join(",")}
+              </Text>
+            </Text>
+          ) : undefined}
+        </Text>
+        {/* TODO: Add secret wasm badge */}
+        {/*isSecretWasm ? (
+          <React.Fragment>
+            <br />
+            <Badge
+              color="primary"
+              pill
+              style={{ marginTop: "6px", marginBottom: "6px" }}
+            >
+              <FormattedMessage id="sign.list.message.wasm/MsgExecuteContract.content.badge.secret-wasm" />
+            </Badge>
+          </React.Fragment>
+        ) : (
+          <br />
+        )*/}
+        <WasmExecutionMsgView msg={msg} />
+      </Text>
+    ),
+  };
+}
+
+export const WasmExecutionMsgView: FunctionComponent<{
+  // eslint-disable-next-line @typescript-eslint/ban-types
+  msg: object | string;
+}> = observer(({ msg }) => {
+  const { chainStore, accountStore } = useStore();
+
+  const style = useStyle();
+
+  // TODO: Toggle open button?
+  // const [isOpen, setIsOpen] = useState(true);
+  // const toggleOpen = () => setIsOpen((isOpen) => !isOpen);
+
+  const [detailsMsg, setDetailsMsg] = useState(() =>
+    JSON.stringify(msg, null, 2)
+  );
+  const [warningMsg, setWarningMsg] = useState("");
+
+  useEffect(() => {
+    // If msg is string, it will be the message for secret-wasm.
+    // So, try to decrypt.
+    // But, if this msg is not encrypted via Stream, Stream cannot decrypt it.
+    // TODO: Handle the error case. If an error occurs, rather than rejecting the signing, it informs the user that Stream cannot decrypt it and allows the user to choose.
+    if (typeof msg === "string") {
+      (async () => {
+        try {
+          let cipherText = Buffer.from(Buffer.from(msg, "base64"));
+          // Msg is start with 32 bytes nonce and 32 bytes public key.
+          const nonce = cipherText.slice(0, 32);
+          cipherText = cipherText.slice(64);
+
+          const stream-wallet = await accountStore
+            .getAccount(chainStore.current.chainId)
+            .getStream();
+          if (!stream-wallet) {
+            throw new Error("Can't get the stream-wallet API");
+          }
+
+          const enigmaUtils = stream-wallet.getEnigmaUtils(chainStore.current.chainId);
+          let plainText = Buffer.from(
+            await enigmaUtils.decrypt(cipherText, nonce)
+          );
+          // Remove the contract code hash.
+          plainText = plainText.slice(64);
+
+          setDetailsMsg(
+            JSON.stringify(JSON.parse(plainText.toString()), null, 2)
+          );
+          setWarningMsg("");
+        } catch {
+          setWarningMsg(
+            "Failed to decrypt Secret message. This may be due to Stream viewing key not matching the transaction viewing key."
+          );
+        }
+      })();
+    }
+  }, [accountStore, chainStore, chainStore.current.chainId, msg]);
+
+  return (
+    <Text style={style.flatten(["margin-top-8"])}>
+      <Text>{`\n${detailsMsg}`}</Text>
+      {warningMsg ? (
+        <Text style={style.flatten(["color-red-200"])}>{warningMsg}</Text>
+      ) : null}
+    </Text>
+  );
+});
+
 /*
 export function renderMsgInstantiateContract(
   currencies: Currency[],
@@ -453,70 +595,6 @@ export function renderMsgInstantiateContract(
   };
 }
 
-export function renderMsgExecuteContract(
-  currencies: Currency[],
-  intl: IntlShape,
-  sentFunds: CoinPrimitive[],
-  callbackCodeHash: string | undefined,
-  contract: string,
-  // eslint-disable-next-line @typescript-eslint/ban-types
-  msg: object | string
-) {
-  const sent: { amount: string; denom: string }[] = [];
-  for (const coinPrimitive of sentFunds) {
-    const coin = new Coin(coinPrimitive.denom, coinPrimitive.amount);
-    const parsed = CoinUtils.parseDecAndDenomFromCoin(currencies, coin);
-
-    sent.push({
-      amount: clearDecimals(parsed.amount),
-      denom: parsed.denom,
-    });
-  }
-
-  const isSecretWasm = callbackCodeHash != null;
-
-  return {
-    icon: "fas fa-cog",
-    title: intl.formatMessage({
-      id: "sign.list.message.wasm/MsgExecuteContract.title",
-    }),
-    content: (
-      <React.Fragment>
-        <FormattedMessage
-          id="sign.list.message.wasm/MsgExecuteContract.content"
-          values={{
-            b: (...chunks: any[]) => <b>{chunks}</b>,
-            br: <br />,
-            address: Bech32Address.shortenAddress(contract, 26),
-            ["only-sent-exist"]: (...chunks: any[]) =>
-              sent.length > 0 ? chunks : "",
-            sent: sent
-              .map((coin) => {
-                return `${coin.amount} ${coin.denom}`;
-              })
-              .join(","),
-          }}
-        />
-        {isSecretWasm ? (
-          <React.Fragment>
-            <br />
-            <Badge
-              color="primary"
-              pill
-              style={{ marginTop: "6px", marginBottom: "6px" }}
-            >
-              <FormattedMessage id="sign.list.message.wasm/MsgExecuteContract.content.badge.secret-wasm" />
-            </Badge>
-          </React.Fragment>
-        ) : (
-          <br />
-        )}
-        <WasmExecutionMsgView msg={msg} />
-      </React.Fragment>
-    ),
-  };
-}
-
 export const WasmExecutionMsgView: FunctionComponent<{
   // eslint-disable-next-line @typescript-eslint/ban-types
   msg: object | string;
@@ -536,7 +614,7 @@ export const WasmExecutionMsgView: FunctionComponent<{
   useEffect(() => {
     // If msg is string, it will be the message for secret-wasm.
     // So, try to decrypt.
-    // But, if this msg is not encrypted via Keplr, Keplr cannot decrypt it.
+    // But, if this msg is not encrypted via Stream, Stream cannot decrypt it.
     // TODO: Handle the error case. If an error occurs, rather than rejecting the signing, it informs the user that Kepler cannot decrypt it and allows the user to choose.
     if (typeof msg === "string") {
       (async () => {
@@ -546,14 +624,14 @@ export const WasmExecutionMsgView: FunctionComponent<{
           const nonce = cipherText.slice(0, 32);
           cipherText = cipherText.slice(64);
 
-          const keplr = await accountStore
+          const stream-wallet = await accountStore
             .getAccount(chainStore.current.chainId)
-            .getKeplr();
-          if (!keplr) {
-            throw new Error("Can't get the keplr API");
+            .getStream();
+          if (!stream-wallet) {
+            throw new Error("Can't get the stream-wallet API");
           }
 
-          const enigmaUtils = keplr.getEnigmaUtils(chainStore.current.chainId);
+          const enigmaUtils = stream-wallet.getEnigmaUtils(chainStore.current.chainId);
           let plainText = Buffer.from(
             await enigmaUtils.decrypt(cipherText, nonce)
           );
@@ -621,9 +699,7 @@ export const UnknownMsgView: FunctionComponent<{ msg: object }> = ({ msg }) => {
   }, [msg]);
 
   return (
-    <Text style={style.flatten(["body3", "color-text-black-low"])}>
-      {prettyMsg}
-    </Text>
+    <Text style={style.flatten(["body3", "color-text-low"])}>{prettyMsg}</Text>
   );
 };
 

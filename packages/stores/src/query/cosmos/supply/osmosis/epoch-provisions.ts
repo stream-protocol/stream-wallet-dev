@@ -1,9 +1,9 @@
 import { ChainGetter } from "../../../../common";
 import { ObservableChainQuery } from "../../../chain-query";
 import { EpochProvisions } from "./types";
-import { KVStore } from "@keplr-wallet/common";
+import { KVStore } from "@stream-wallet/common";
 import { computed, makeObservable } from "mobx";
-import { CoinPretty, Int } from "@keplr-wallet/unit";
+import { CoinPretty, Int } from "@stream-wallet/unit";
 import { ObservableQueryOsmosisMintParmas } from "./params";
 
 export class ObservableQueryOsmosisEpochProvisions extends ObservableChainQuery<EpochProvisions> {

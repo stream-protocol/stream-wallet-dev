@@ -1,5 +1,10 @@
-import { Message, MessageRequester, Result } from "@keplr-wallet/router";
-import { JSONUint8Array } from "@keplr-wallet/router/build/json-uint8-array";
+import {
+  Message,
+  MessageRequester,
+  Result,
+  JSONUint8Array,
+  StreamError,
+} from "@stream-wallet/router";
 import EventEmitter from "eventemitter3";
 
 export class WCMessageRequester implements MessageRequester {
@@ -9,11 +14,11 @@ export class WCMessageRequester implements MessageRequester {
   ) {}
 
   static getVirtualSessionURL = (sessionId: string): string => {
-    return `https://keplr_wc_virtual.${sessionId}`;
+    return `https://stream-wallet_wc_virtual.${sessionId}`;
   };
 
   static isVirtualSessionURL = (url: string): boolean => {
-    return url.startsWith("https://keplr_wc_virtual.");
+    return url.startsWith("https://stream-wallet_wc_virtual.");
   };
 
   static getSessionIdFromVirtualURL = (url: string): string => {
@@ -21,7 +26,7 @@ export class WCMessageRequester implements MessageRequester {
       throw new Error("URL is not for wallet connect");
     }
 
-    return url.replace("https://keplr_wc_virtual.", "").replace("/", "");
+    return url.replace("https://stream-wallet_wc_virtual.", "").replace("/", "");
   };
 
   async sendMessage<M extends Message<unknown>>(
@@ -65,7 +70,15 @@ export class WCMessageRequester implements MessageRequester {
     }
 
     if (result.error) {
-      throw new Error(result.error);
+      if (typeof result.error === "string") {
+        throw new Error(result.error);
+      } else {
+        throw new StreamError(
+          result.error.module,
+          result.error.code,
+          result.error.message
+        );
+      }
     }
 
     return result.return;

@@ -1,8 +1,8 @@
 import "./src/background/background";
 
-import { Keplr } from "@keplr-wallet/provider";
+import { Stream } from "@stream-wallet/provider";
 import { RNMessageRequesterInternal } from "./src/router";
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
-window.keplr = new Keplr("", new RNMessageRequesterInternal());
+window.stream-wallet = new Stream("", new RNMessageRequesterInternal());

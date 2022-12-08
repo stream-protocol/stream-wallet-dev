@@ -1,4 +1,4 @@
-import { BACKGROUND_PORT, MessageRequester } from "@keplr-wallet/router";
+import { BACKGROUND_PORT, MessageRequester } from "@stream-wallet/router";
 import {
   AddLedgerKeyMsg,
   AddMnemonicKeyMsg,
@@ -23,15 +23,15 @@ import {
   CheckPasswordMsg,
   ExportKeyRingData,
   ExportKeyRingDatasMsg,
-} from "@keplr-wallet/background";
+} from "@stream-wallet/background";
 
 import { computed, flow, makeObservable, observable, runInAction } from "mobx";
 
 import { InteractionStore } from "./interaction";
 import { ChainGetter } from "../common";
-import { BIP44 } from "@keplr-wallet/types";
+import { BIP44 } from "@stream-wallet/types";
 import { DeepReadonly } from "utility-types";
-import { toGenerator } from "@keplr-wallet/common";
+import { toGenerator } from "@stream-wallet/common";
 
 export class KeyRingSelectablesStore {
   @observable
@@ -399,7 +399,7 @@ export class KeyRingStore {
   }
 
   protected dispatchKeyStoreChangeEvent() {
-    this.eventDispatcher.dispatchEvent("keplr_keystorechange");
+    this.eventDispatcher.dispatchEvent("stream-wallet_keystorechange");
 
     for (const listener of this.keyStoreChangedListeners) {
       listener();

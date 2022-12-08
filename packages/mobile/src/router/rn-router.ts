@@ -1,9 +1,10 @@
 import {
   EnvProducer,
+  StreamError,
   MessageSender,
   Result,
   Router,
-} from "@keplr-wallet/router";
+} from "@stream-wallet/router";
 
 import EventEmitter from "eventemitter3";
 
@@ -50,7 +51,15 @@ export class RNRouterBase extends Router {
       console.log(
         `Failed to process msg ${message.type}: ${e?.message || e?.toString()}`
       );
-      if (e) {
+      if (e instanceof StreamError) {
+        sender.resolver({
+          error: {
+            code: e.code,
+            module: e.module,
+            message: e.message || e.toString(),
+          },
+        });
+      } else if (e) {
         sender.resolver({
           error: e.message || e.toString(),
         });

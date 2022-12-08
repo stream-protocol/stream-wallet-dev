@@ -1,10 +1,9 @@
 import { ObservableChainQuery } from "../chain-query";
-import { KVStore, toGenerator } from "@keplr-wallet/common";
+import { KVStore, toGenerator } from "@stream-wallet/common";
 import { ChainGetter } from "../../common";
 import { ObservableQuerySecretContractCodeHash } from "./contract-hash";
-import { autorun, computed, flow, makeObservable, observable } from "mobx";
-import { Keplr } from "@keplr-wallet/types";
-import Axios, { CancelToken } from "axios";
+import { computed, flow, makeObservable, observable } from "mobx";
+import { Stream } from "@stream-wallet/types";
 import { QueryResponse } from "../../common";
 
 import { Buffer } from "buffer/";
@@ -13,7 +12,7 @@ export class ObservableSecretContractChainQuery<
   T
 > extends ObservableChainQuery<T> {
   @observable.ref
-  protected keplr?: Keplr = undefined;
+  protected stream-wallet?: Stream = undefined;
 
   protected nonce?: Uint8Array;
 
@@ -24,7 +23,7 @@ export class ObservableSecretContractChainQuery<
     kvStore: KVStore,
     chainId: string,
     chainGetter: ChainGetter,
-    protected readonly apiGetter: () => Promise<Keplr | undefined>,
+    protected readonly apiGetter: () => Promise<Stream | undefined>,
     protected readonly contractAddress: string,
     // eslint-disable-next-line @typescript-eslint/ban-types
     protected obj: object,
@@ -33,30 +32,31 @@ export class ObservableSecretContractChainQuery<
     // Don't need to set the url initially because it can't request without encyption.
     super(kvStore, chainId, chainGetter, ``);
     makeObservable(this);
-
-    // Try to get the keplr API.
-    this.initKeplr();
-
-    const disposer = autorun(() => {
-      // If the keplr API is ready and the contract code hash is fetched, try to init.
-      if (this.keplr && this.contractCodeHash) {
-        this.init();
-        disposer();
-      }
-    });
   }
 
-  // eslint-disable-next-line @typescript-eslint/ban-types
-  protected setObj(obj: object) {
-    this.obj = obj;
-    this.init();
+  protected async onStart() {
+    super.onStart();
+
+    if (!this.stream-wallet) {
+      await this.initStream();
+    }
+
+    if (!this.stream-wallet) {
+      throw new Error("Failed to get stream-wallet");
+    }
+
+    await this.querySecretContractCodeHash
+      .getQueryContract(this.contractAddress)
+      .waitResponse();
+
+    await this.init();
   }
 
   get isFetching(): boolean {
     return (
       this.querySecretContractCodeHash.getQueryContract(this.contractAddress)
         .isFetching ||
-      this.keplr == null ||
+      this.stream-wallet == null ||
       this._isIniting ||
       super.isFetching
     );
@@ -74,16 +74,16 @@ export class ObservableSecretContractChainQuery<
   }
 
   @flow
-  protected *initKeplr() {
-    this.keplr = yield* toGenerator(this.apiGetter());
+  protected *initStream() {
+    this.stream-wallet = yield* toGenerator(this.apiGetter());
   }
 
   @flow
   protected *init() {
     this._isIniting = true;
 
-    if (this.keplr && this.contractCodeHash) {
-      const enigmaUtils = this.keplr.getEnigmaUtils(this.chainId);
+    if (this.stream-wallet && this.contractCodeHash) {
+      const enigmaUtils = this.stream-wallet.getEnigmaUtils(this.chainId);
       const encrypted = yield* toGenerator(
         enigmaUtils.encrypt(this.contractCodeHash, this.obj)
       );
@@ -102,13 +102,16 @@ export class ObservableSecretContractChainQuery<
   }
 
   protected async fetchResponse(
-    cancelToken: CancelToken
-  ): Promise<QueryResponse<T>> {
+    abortController: AbortController
+  ): Promise<{ response: QueryResponse<T>; headers: any }> {
     let response: QueryResponse<T>;
+    let headers: any;
     try {
-      response = await super.fetchResponse(cancelToken);
+      const fetched = await super.fetchResponse(abortController);
+      response = fetched.response;
+      headers = fetched.headers;
     } catch (e) {
-      if (!Axios.isCancel(e) && e.response?.data?.error) {
+      if (e.response?.data?.error) {
         const encryptedError = e.response.data.error;
 
         const errorMessageRgx = /rpc error: code = (.+) = encrypted: (.+): (.+)/g;
@@ -118,8 +121,8 @@ export class ObservableSecretContractChainQuery<
           const errorCipherB64 = rgxMatches[2];
           const errorCipherBz = Buffer.from(errorCipherB64, "base64");
 
-          if (this.keplr && this.nonce) {
-            const decrypted = await this.keplr
+          if (this.stream-wallet && this.nonce) {
+            const decrypted = await this.stream-wallet
               .getEnigmaUtils(this.chainId)
               .decrypt(errorCipherBz, this.nonce);
 
@@ -142,8 +145,8 @@ export class ObservableSecretContractChainQuery<
         }
       | undefined;
 
-    if (!this.keplr) {
-      throw new Error("Keplr API not initialized");
+    if (!this.stream-wallet) {
+      throw new Error("Stream API not initialized");
     }
 
     if (!this.nonce) {
@@ -154,7 +157,7 @@ export class ObservableSecretContractChainQuery<
       throw new Error("Failed to get the response from the contract");
     }
 
-    const decrypted = await this.keplr
+    const decrypted = await this.stream-wallet
       .getEnigmaUtils(this.chainId)
       .decrypt(Buffer.from(encResult.result.smart, "base64"), this.nonce);
 
@@ -165,10 +168,13 @@ export class ObservableSecretContractChainQuery<
 
     const obj = JSON.parse(message);
     return {
-      data: obj as T,
-      status: response.status,
-      staled: false,
-      timestamp: Date.now(),
+      headers,
+      response: {
+        data: obj as T,
+        status: response.status,
+        staled: false,
+        timestamp: Date.now(),
+      },
     };
   }
 

@@ -1,8 +1,7 @@
 import { computed, makeObservable } from "mobx";
-import { Dec, DecUtils, Int, IntPretty } from "@keplr-wallet/unit";
+import { Dec, DecUtils, Int, IntPretty } from "@stream-wallet/unit";
 import { ObservableQuerySupplyTotal } from "./supply";
 import { MintingInflation } from "./types";
-import { StakingPool } from "../staking/types";
 import { ObservableChainQuery } from "../../chain-query";
 import { ChainGetter } from "../../../common";
 import { ObservableQueryIrisMintingInfation } from "./iris-minting";
@@ -12,19 +11,24 @@ import {
   ObservableQueryOsmosisEpochs,
   ObservableQueryOsmosisMintParmas,
 } from "./osmosis";
+import { ObservableQueryDistributionParams } from "../distribution";
+import { ObservableQueryStakingPool } from "../staking";
+import { ObservableQueryJunoAnnualProvisions } from "./juno/annual-provisions";
 
 export class ObservableQueryInflation {
   constructor(
     protected readonly chainId: string,
     protected readonly chainGetter: ChainGetter,
     protected readonly _queryMint: ObservableChainQuery<MintingInflation>,
-    protected readonly _queryPool: ObservableChainQuery<StakingPool>,
+    protected readonly _queryPool: ObservableQueryStakingPool,
     protected readonly _querySupplyTotal: ObservableQuerySupplyTotal,
     protected readonly _queryIrisMint: ObservableQueryIrisMintingInfation,
     protected readonly _querySifchainAPY: ObservableQuerySifchainLiquidityAPY,
     protected readonly _queryOsmosisEpochs: ObservableQueryOsmosisEpochs,
     protected readonly _queryOsmosisEpochProvisions: ObservableQueryOsmosisEpochProvisions,
-    protected readonly _queryOsmosisMintParams: ObservableQueryOsmosisMintParmas
+    protected readonly _queryOsmosisMintParams: ObservableQueryOsmosisMintParmas,
+    protected readonly _queryJunoAnnualProvisions: ObservableQueryJunoAnnualProvisions,
+    protected readonly _queryDistributionParams: ObservableQueryDistributionParams
   ) {
     makeObservable(this);
   }
@@ -49,6 +53,8 @@ export class ObservableQueryInflation {
   // If the staking pool info is fetched, this will consider this info for calculating the more accurate value.
   @computed
   get inflation(): IntPretty {
+    // TODO: Use `RatePretty`
+
     try {
       let dec: Dec | undefined;
 
@@ -102,8 +108,28 @@ export class ObservableQueryInflation {
             }
           }
         }
+      } else if (chainInfo.chainId.startsWith("juno")) {
+        // In juno, the actual supply on chain and the supply recognized by the community are different.
+        // I don't know why, but it's annoying to deal with this problem.
+        if (
+          this._queryJunoAnnualProvisions.annualProvisionsRaw &&
+          this._queryPool.response
+        ) {
+          const bondedToken = new Dec(
+            this._queryPool.response.data.pool.bonded_tokens
+          );
+
+          const dec = this._queryJunoAnnualProvisions.annualProvisionsRaw
+            .quo(bondedToken)
+            .mul(
+              new Dec(1).sub(this._queryDistributionParams.communityTax.toDec())
+            )
+            .mul(DecUtils.getTenExponentN(2));
+
+          return new IntPretty(dec);
+        }
       } else {
-        dec = new Dec(this._queryMint.response?.data.result ?? "0").mul(
+        dec = new Dec(this._queryMint.response?.data.inflation ?? "0").mul(
           DecUtils.getPrecisionDec(2)
         );
       }
@@ -112,34 +138,49 @@ export class ObservableQueryInflation {
         return new IntPretty(new Int(0)).ready(false);
       }
 
-      if (
-        this._queryPool.response &&
-        this._querySupplyTotal.getQueryStakeDenom().response
-      ) {
+      if (this._queryPool.response) {
         const bondedToken = new Dec(
-          this._queryPool.response.data.result.bonded_tokens
+          this._queryPool.response.data.pool.bonded_tokens
         );
+
         const totalStr = (() => {
           if (chainInfo.chainId.startsWith("osmosis")) {
-            // For osmosis, for now, just assume that the curreny supply is 100,000,000 with 6 decimals.
+            // For osmosis, for now, just assume that the current supply is 100,000,000 with 6 decimals.
             return DecUtils.getPrecisionDec(8 + 6).toString();
           }
 
-          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          const response = this._querySupplyTotal.getQueryStakeDenom().response!
-            .data.result;
+          if (chainInfo.chainId.startsWith("umee")) {
+            const supplyTotalRes = this._querySupplyTotal.getQueryDenomByQueryString(
+              chainInfo.stakeCurrency.coinMinimalDenom
+            ).response;
 
-          if (typeof response === "string") {
-            return response;
+            if (!supplyTotalRes) {
+              return "0";
+            } else {
+              return supplyTotalRes.data.amount.amount;
+            }
+          }
+
+          const supplyTotalRes = this._querySupplyTotal.getQueryStakeDenom()
+            .response;
+          if (!supplyTotalRes) {
+            return "0";
           } else {
-            return response.amount;
+            return supplyTotalRes.data.amount.amount;
           }
         })();
         const total = new Dec(totalStr);
         if (total.gt(new Dec(0))) {
-          const ratio = bondedToken.quo(total);
+          // staking APR is calculated as:
+          //   new_coins_per_year = inflation_pct * total_supply * (1 - community_pool_tax)
+          //   apr = new_coins_per_year / total_bonded_tokens
 
-          dec = dec.quo(ratio);
+          const ratio = bondedToken.quo(total);
+          dec = dec
+            .mul(
+              new Dec(1).sub(this._queryDistributionParams.communityTax.toDec())
+            )
+            .quo(ratio);
           // TODO: Rounding?
         }
       }

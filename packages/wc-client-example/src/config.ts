@@ -1,9 +1,9 @@
-import { Bech32Address } from "@keplr-wallet/cosmos";
+import { Bech32Address } from "@stream-wallet/cosmos";
 
 export const EmbedChainInfos = [
   {
-    rpc: "https://rpc-cosmoshub.keplr.app",
-    rest: "https://lcd-cosmoshub.keplr.app",
+    rpc: "https://rpc-cosmoshub.stream-wallet.app",
+    rest: "https://lcd-cosmoshub.stream-wallet.app",
     chainId: "cosmoshub-4",
     chainName: "Cosmos",
     stakeCurrency: {
@@ -14,12 +14,12 @@ export const EmbedChainInfos = [
     },
     walletUrl:
       process.env.NODE_ENV === "production"
-        ? "https://wallet.keplr.app/#/cosmoshub/stake"
-        : "http://localhost:8081/#/cosmoshub/stake",
+        ? "https://wallet.streamprotocol.app/chains/cosmos-hub"
+        : "http://localhost:8081/chains/cosmos-hub",
     walletUrlForStaking:
       process.env.NODE_ENV === "production"
-        ? "https://wallet.keplr.app/#/cosmoshub/stake"
-        : "http://localhost:8081/#/cosmoshub/stake",
+        ? "https://wallet.streamprotocol.app/chains/cosmos-hub"
+        : "http://localhost:8081/chains/cosmos-hub",
     bip44: {
       coinType: 118,
     },
@@ -44,8 +44,8 @@ export const EmbedChainInfos = [
     features: ["stargate", "ibc-transfer"],
   },
   {
-    rpc: "https://rpc-osmosis.keplr.app",
-    rest: "https://lcd-osmosis.keplr.app",
+    rpc: "https://rpc-osmosis.stream-wallet.app",
+    rest: "https://lcd-osmosis.stream-wallet.app",
     chainId: "osmosis-1",
     chainName: "Osmosis",
     stakeCurrency: {
@@ -60,8 +60,8 @@ export const EmbedChainInfos = [
         : "https://app.osmosis.zone",
     walletUrlForStaking:
       process.env.NODE_ENV === "production"
-        ? "https://wallet.keplr.app/#/osmosis/stake"
-        : "http://localhost:8081/#/osmosis/stake",
+        ? "https://wallet.streamprotocol.app/chains/osmosis"
+        : "http://localhost:8081/chains/osmosis",
     bip44: { coinType: 118 },
     bech32Config: Bech32Address.defaultBech32Config("osmo"),
     currencies: [

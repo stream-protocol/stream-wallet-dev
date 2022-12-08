@@ -1,10 +1,12 @@
 /**
- * getKeplrExtensionRouterId returns the `window.keplrExtensionRouterId`.
- * If the `window.keplrExtensionRouterId` is not initialized, it will be initialized and returned.
+ * getStreamExtensionRouterId returns the `window.stream-walletExtensionRouterId`.
+ * If the `window.stream-walletExtensionRouterId` is not initialized, it will be initialized and returned.
  */
-export function getKeplrExtensionRouterId(): number {
-  if (window.keplrExtensionRouterId == null) {
-    window.keplrExtensionRouterId = Math.floor(Math.random() * 1000000);
+export function getStreamExtensionRouterId(): number {
+  if (window.stream-walletExtensionRouterId == null) {
+    window.stream-walletExtensionRouterId = Math.floor(
+      Math.random() * Number.MAX_SAFE_INTEGER
+    );
   }
-  return window.keplrExtensionRouterId;
+  return window.stream-walletExtensionRouterId;
 }

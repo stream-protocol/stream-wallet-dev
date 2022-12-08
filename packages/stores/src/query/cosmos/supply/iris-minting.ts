@@ -1,5 +1,5 @@
 import { ObservableChainQuery } from "../../chain-query";
-import { KVStore } from "@keplr-wallet/common";
+import { KVStore } from "@stream-wallet/common";
 import { ChainGetter } from "../../../common";
 
 export class ObservableQueryIrisMintingInfation extends ObservableChainQuery<{

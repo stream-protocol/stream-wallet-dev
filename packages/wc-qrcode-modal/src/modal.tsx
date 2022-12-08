@@ -59,20 +59,20 @@ export const Modal: FunctionComponent<{
       if (checkAndroid) {
         // Save the mobile link.
         saveMobileLinkInfo({
-          name: "Keplr",
+          name: "Stream Wallet",
           href:
-            "intent://wcV1#Intent;package=com.chainapsis.keplr;scheme=keplrwallet;end;",
+            "intent://wcV1#Intent;package=app.streamprotocol.stream-wallet;scheme=stream-wallet;end;",
         });
 
-        return `intent://wcV1?${uri}#Intent;package=com.chainapsis.keplr;scheme=keplrwallet;end;`;
+        return `intent://wcV1?${uri}#Intent;package=app.streamprotocol.stream-wallet;scheme=stream-wallet;end;`;
       } else {
         // Save the mobile link.
         saveMobileLinkInfo({
-          name: "Keplr",
-          href: "keplrwallet://wcV1",
+          name: "Stream Wallet",
+          href: "stream-wallet://wcV1",
         });
 
-        return `keplrwallet://wcV1?${uri}`;
+        return `stream-wallet://wcV1?${uri}`;
       }
     }
   }, [checkAndroid, checkMobile, uri]);

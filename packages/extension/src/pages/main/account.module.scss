@@ -5,7 +5,7 @@
 
 .name {
   font-size: 20px;
-  color: #32325d;
+  color: #0d1724;
   font-weight: bold;
 }
 
@@ -23,4 +23,15 @@
   color: #474747;
 
   cursor: pointer;
+}
+
+:global(.popper) {
+  font-size: 14px;
+  min-width: 140px;
+  text-align: center;
+}
+
+.unsupported-key-icon {
+  width: 100%;
+  text-align: center;
 }

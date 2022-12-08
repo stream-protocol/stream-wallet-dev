@@ -1,6 +1,6 @@
 import React, { FunctionComponent } from "react";
 import { observer } from "mobx-react-lite";
-import { IAmountConfig } from "@keplr-wallet/hooks";
+import { IAmountConfig } from "@stream-wallet/hooks";
 import { TextStyle, ViewStyle } from "react-native";
 import { Selector } from "./selector";
 

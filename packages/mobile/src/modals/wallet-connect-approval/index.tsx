@@ -5,7 +5,7 @@ import { Text, View } from "react-native";
 import { useStyle } from "../../styles";
 import { Button } from "../../components/button";
 import { useStore } from "../../stores";
-import { PermissionData } from "@keplr-wallet/background";
+import { PermissionData } from "@stream-wallet/background";
 import { WCMessageRequester } from "../../stores/wallet-connect/msg-requester";
 import { WCAppLogoAndName } from "../../components/wallet-connect";
 
@@ -41,23 +41,15 @@ export const WalletConnectApprovalModal: FunctionComponent<{
         />
         <Text style={style.flatten(["margin-bottom-40", "text-center"])}>
           <Text
-            style={style.flatten([
-              "body1",
-              "color-text-black-low",
-              "font-semibold",
-            ])}
+            style={style.flatten(["body1", "color-text-low", "font-semibold"])}
           >
             {appName}
           </Text>
-          <Text style={style.flatten(["body1", "color-text-black-low"])}>
-            {" is requesting to connect to your Keplr account on "}
+          <Text style={style.flatten(["body1", "color-text-low"])}>
+            {" is requesting to connect to your Stream account on "}
           </Text>
           <Text
-            style={style.flatten([
-              "body1",
-              "color-text-black-low",
-              "font-semibold",
-            ])}
+            style={style.flatten(["body1", "color-text-low", "font-semibold"])}
           >
             {data.chainIds.join(", ") + "."}
           </Text>

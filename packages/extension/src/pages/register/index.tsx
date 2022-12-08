@@ -10,7 +10,7 @@ import { Button } from "reactstrap";
 
 import { FormattedMessage } from "react-intl";
 
-import { useRegisterConfig } from "@keplr-wallet/hooks";
+import { useRegisterConfig } from "@stream-wallet/hooks";
 import { useStore } from "../../stores";
 import { NewMnemonicIntro, NewMnemonicPage, TypeNewMnemonic } from "./mnemonic";
 import {
@@ -25,16 +25,7 @@ import {
 } from "./ledger";
 import { WelcomePage } from "./welcome";
 import { AdditionalSignInPrepend } from "../../config.ui";
-import {
-  MigrateEthereumAddressIntro,
-  MigrateEthereumAddressPage,
-  TypeMigrateEth,
-} from "./migration";
-
-export enum NunWords {
-  WORDS12,
-  WORDS24,
-}
+import classnames from "classnames";
 
 export const BackButton: FunctionComponent<{ onClick: () => void }> = ({
   onClick,
@@ -51,14 +42,14 @@ export const BackButton: FunctionComponent<{ onClick: () => void }> = ({
 
 export const RegisterPage: FunctionComponent = observer(() => {
   useEffect(() => {
-    document.body.setAttribute("data-centered", "true");
+    document.documentElement.setAttribute("data-register-page", "true");
 
     return () => {
-      document.body.removeAttribute("data-centered");
+      document.documentElement.removeAttribute("data-register-page");
     };
   }, []);
 
-  const { keyRingStore } = useStore();
+  const { keyRingStore, uiConfigStore } = useStore();
 
   const registerConfig = useRegisterConfig(keyRingStore, [
     ...(AdditionalSignInPrepend ?? []),
@@ -72,37 +63,59 @@ export const RegisterPage: FunctionComponent = observer(() => {
       intro: RecoverMnemonicIntro,
       page: RecoverMnemonicPage,
     },
-    {
-      type: TypeImportLedger,
-      intro: ImportLedgerIntro,
-      page: ImportLedgerPage,
-    },
-    // TODO: think about moving this into the configuration at some point
-    {
-      type: TypeMigrateEth,
-      intro: MigrateEthereumAddressIntro,
-      page: MigrateEthereumAddressPage,
-    },
+    // Currently, there is no way to use ledger with stream-wallet on firefox.
+    // Temporarily, hide the ledger usage.
+    ...(uiConfigStore.platform !== "firefox"
+      ? [
+          {
+            type: TypeImportLedger,
+            intro: ImportLedgerIntro,
+            page: ImportLedgerPage,
+          },
+        ]
+      : []),
   ]);
 
   return (
     <EmptyLayout
-      className={style.container}
+      className={classnames(style.container, {
+        large:
+          !registerConfig.isFinalized &&
+          registerConfig.type === "recover-mnemonic",
+      })}
       style={{ height: "100%", backgroundColor: "white", padding: 0 }}
     >
+      <div style={{ flex: 10 }} />
       <div className={style.logoContainer}>
-        <img
-          className={style.icon}
-          src={require("../../public/assets/temp-icon.svg")}
-          alt="logo"
-        />
-        <div className={style.logoInnerContainer}>
+        <div
+          className={classnames(style.logoInnerContainer, {
+            [style.justifyCenter]: registerConfig.isIntro,
+          })}
+        >
           <img
-            className={style.logo}
-            src={require("../../public/assets/logo-temp.png")}
+            className={style.icon}
+            src={
+              uiConfigStore.isBeta
+                ? require("../../public/assets/logo-beta-256.png")
+                : require("../../public/assets/logo-256.png")
+            }
+            alt="logo"
+          />
+          <img
+            className={style.brandText}
+            src={require("../../public/assets/brand-text-fit-logo-height.png")}
             alt="logo"
           />
         </div>
+        {registerConfig.isIntro ? (
+          <div className={style.introBrandSubTextContainer}>
+            <img
+              className={style.introBrandSubText}
+              src={require("../../public/assets/brand-sub-text.png")}
+              alt="The Interchain Wallet"
+            />
+          </div>
+        ) : null}
       </div>
       {registerConfig.render()}
       {registerConfig.isFinalized ? <WelcomePage /> : null}
@@ -116,6 +129,7 @@ export const RegisterPage: FunctionComponent = observer(() => {
           />
         </div>
       ) : null}
+      <div style={{ flex: 13 }} />
     </EmptyLayout>
   );
 });

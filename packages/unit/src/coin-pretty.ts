@@ -1,7 +1,6 @@
 import { IntPretty, IntPrettyOptions } from "./int-pretty";
 import { Dec } from "./decimal";
-import { toMetric } from "./utils";
-import { AppCurrency } from "@keplr-wallet/types";
+import { AppCurrency } from "@stream-wallet/types";
 import { DeepReadonly } from "utility-types";
 import { DecUtils } from "./dec-utils";
 import bigInteger from "big-integer";
@@ -11,6 +10,7 @@ export type CoinPrettyOptions = {
   upperCase: boolean;
   lowerCase: boolean;
   hideDenom: boolean;
+  hideIBCMetadata: boolean;
 };
 
 export class CoinPretty {
@@ -21,6 +21,7 @@ export class CoinPretty {
     upperCase: false,
     lowerCase: false,
     hideDenom: false,
+    hideIBCMetadata: false,
   };
 
   constructor(
@@ -87,6 +88,12 @@ export class CoinPretty {
   hideDenom(bool: boolean): CoinPretty {
     const pretty = this.clone();
     pretty._options.hideDenom = bool;
+    return pretty;
+  }
+
+  hideIBCMetadata(bool: boolean): CoinPretty {
+    const pretty = this.clone();
+    pretty._options.hideIBCMetadata = bool;
     return pretty;
   }
 
@@ -261,6 +268,13 @@ export class CoinPretty {
 
   toString(): string {
     let denom = this.denom;
+    if (
+      this._options.hideIBCMetadata &&
+      "originCurrency" in this.currency &&
+      this.currency.originCurrency
+    ) {
+      denom = this.currency.originCurrency.coinDenom;
+    }
     if (this._options.upperCase) {
       denom = denom.toUpperCase();
     }
@@ -276,42 +290,6 @@ export class CoinPretty {
     }
 
     return this.intPretty.toStringWithSymbols("", `${separator}${denom}`);
-  }
-
-  toMetricPrefix(): string {
-    let [, afterPoint] = this.intPretty.toString().split(".");
-
-    if (!afterPoint) {
-      return this.intPretty.toString();
-    }
-    for (let i = afterPoint.length; i > 0; i--) {
-      if (afterPoint.endsWith("0")) {
-        afterPoint = afterPoint.slice(0, i - 1);
-      }
-    }
-
-    let denom = this.denom;
-    if (this._options.upperCase) {
-      denom = denom.toUpperCase();
-    }
-    if (this._options.lowerCase) {
-      denom = denom.toLowerCase();
-    }
-
-    let separator = this._options.separator;
-
-    if (this._options.hideDenom) {
-      denom = "";
-      separator = "";
-    }
-
-    const { remainder, prefix } = toMetric(afterPoint.length);
-    const numberPart = remainder
-      ? Number(afterPoint) / Math.pow(10, remainder)
-      : Number(afterPoint);
-    const prefixPart = prefix ? ` ${prefix}` : "";
-
-    return `${numberPart}${prefixPart}${separator}${denom}`;
   }
 
   clone(): CoinPretty {

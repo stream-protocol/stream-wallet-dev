@@ -1,14 +1,13 @@
 import { computed, makeObservable, override } from "mobx";
-import { DenomHelper, KVStore } from "@keplr-wallet/common";
+import { DenomHelper, KVStore } from "@stream-wallet/common";
 import { ChainGetter, QueryResponse } from "../../common";
 import { ObservableQuerySecretContractCodeHash } from "./contract-hash";
 import { QueryError } from "../../common";
-import { CoinPretty, Int } from "@keplr-wallet/unit";
+import { CoinPretty, Int } from "@stream-wallet/unit";
 import { BalanceRegistry, ObservableQueryBalanceInner } from "../balances";
 import { ObservableSecretContractChainQuery } from "./contract-query";
-import { CancelToken } from "axios";
 import { WrongViewingKeyError } from "./errors";
-import { Keplr } from "@keplr-wallet/types";
+import { Stream } from "@stream-wallet/types";
 
 export class ObservableQuerySecret20Balance extends ObservableSecretContractChainQuery<{
   balance: { amount: string };
@@ -20,10 +19,10 @@ export class ObservableQuerySecret20Balance extends ObservableSecretContractChai
     kvStore: KVStore,
     chainId: string,
     chainGetter: ChainGetter,
-    protected readonly apiGetter: () => Promise<Keplr | undefined>,
+    protected readonly apiGetter: () => Promise<Stream | undefined>,
     protected readonly contractAddress: string,
     protected readonly bech32Address: string,
-    protected readonly parent: ObservableQuerySecret20BalanceInner,
+    protected readonly viewingKey: string,
     protected readonly querySecretContractCodeHash: ObservableQuerySecretContractCodeHash
   ) {
     super(
@@ -32,9 +31,12 @@ export class ObservableQuerySecret20Balance extends ObservableSecretContractChai
       chainGetter,
       apiGetter,
       contractAddress,
-      {},
+      {
+        balance: { address: bech32Address, key: viewingKey },
+      },
       querySecretContractCodeHash
     );
+
     makeObservable(this);
 
     if (!this.viewingKey) {
@@ -43,21 +45,7 @@ export class ObservableQuerySecret20Balance extends ObservableSecretContractChai
         statusText: "Viewing key is empty",
         message: "Viewing key is empty",
       });
-    } else {
-      this.setObj({
-        balance: { address: bech32Address, key: this.viewingKey },
-      });
     }
-  }
-
-  @computed
-  get viewingKey(): string {
-    const currency = this.parent.currency;
-    if ("type" in currency && currency.type === "secret20") {
-      return currency.viewingKey;
-    }
-
-    return "";
   }
 
   protected canFetch(): boolean {
@@ -67,15 +55,21 @@ export class ObservableQuerySecret20Balance extends ObservableSecretContractChai
   }
 
   protected async fetchResponse(
-    cancelToken: CancelToken
-  ): Promise<QueryResponse<{ balance: { amount: string } }>> {
-    const result = await super.fetchResponse(cancelToken);
+    abortController: AbortController
+  ): Promise<{
+    response: QueryResponse<{ balance: { amount: string } }>;
+    headers: any;
+  }> {
+    const { response, headers } = await super.fetchResponse(abortController);
 
-    if (result.data["viewing_key_error"]) {
-      throw new WrongViewingKeyError(result.data["viewing_key_error"]?.msg);
+    if (response.data["viewing_key_error"]) {
+      throw new WrongViewingKeyError(response.data["viewing_key_error"]?.msg);
     }
 
-    return result;
+    return {
+      headers,
+      response,
+    };
   }
 }
 
@@ -86,7 +80,7 @@ export class ObservableQuerySecret20BalanceInner extends ObservableQueryBalanceI
     kvStore: KVStore,
     chainId: string,
     chainGetter: ChainGetter,
-    protected readonly apiGetter: () => Promise<Keplr | undefined>,
+    protected readonly apiGetter: () => Promise<Stream | undefined>,
     denomHelper: DenomHelper,
     protected readonly bech32Address: string,
     protected readonly querySecretContractCodeHash: ObservableQuerySecretContractCodeHash
@@ -102,6 +96,15 @@ export class ObservableQuerySecret20BalanceInner extends ObservableQueryBalanceI
 
     makeObservable(this);
 
+    const viewingKey = (() => {
+      const currency = this.currency;
+      if ("type" in currency && currency.type === "secret20") {
+        return currency.viewingKey;
+      }
+
+      return "";
+    })();
+
     this.querySecret20Balance = new ObservableQuerySecret20Balance(
       kvStore,
       chainId,
@@ -109,7 +112,7 @@ export class ObservableQuerySecret20BalanceInner extends ObservableQueryBalanceI
       this.apiGetter,
       denomHelper.contractAddress,
       bech32Address,
-      this,
+      viewingKey,
       this.querySecretContractCodeHash
     );
   }
@@ -169,7 +172,7 @@ export class ObservableQuerySecret20BalanceInner extends ObservableQueryBalanceI
 export class ObservableQuerySecret20BalanceRegistry implements BalanceRegistry {
   constructor(
     protected readonly kvStore: KVStore,
-    protected readonly apiGetter: () => Promise<Keplr | undefined>,
+    protected readonly apiGetter: () => Promise<Stream | undefined>,
     protected readonly querySecretContractCodeHash: ObservableQuerySecretContractCodeHash
   ) {}
 

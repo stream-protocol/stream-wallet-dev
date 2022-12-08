@@ -2,7 +2,7 @@ import {
   Router,
   MessageRequester,
   BACKGROUND_PORT,
-} from "@keplr-wallet/router";
+} from "@stream-wallet/router";
 import {
   InteractionForegroundHandler,
   interactionForegroundInit,
@@ -10,7 +10,7 @@ import {
   InteractionWaitingData,
   ApproveInteractionMsg,
   RejectInteractionMsg,
-} from "@keplr-wallet/background";
+} from "@stream-wallet/background";
 import {
   action,
   observable,

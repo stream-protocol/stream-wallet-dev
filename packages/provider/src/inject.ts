@@ -1,52 +1,93 @@
 import {
   ChainInfo,
-  Keplr,
-  Keplr as IKeplr,
-  KeplrIntereactionOptions,
-  KeplrMode,
-  KeplrSignOptions,
+  EthSignType,
+  Stream,
+  Stream as IStream,
+  StreamIntereactionOptions,
+  StreamMode,
+  StreamSignOptions,
   Key,
-} from "@keplr-wallet/types";
-import { Result, JSONUint8Array } from "@keplr-wallet/router";
-import {
   BroadcastMode,
   AminoSignResponse,
   StdSignDoc,
-  StdTx,
-  OfflineSigner,
+  OfflineAminoSigner,
   StdSignature,
-} from "@cosmjs/launchpad";
+  StdTx,
+  DirectSignResponse,
+  OfflineDirectSigner,
+} from "@stream-wallet/types";
+import { Result, JSONUint8Array } from "@stream-wallet/router";
 import { SecretUtils } from "secretjs/types/enigmautils";
-
-import { KeplrEnigmaUtils } from "./enigma";
-import { DirectSignResponse, OfflineDirectSigner } from "@cosmjs/proto-signing";
-
+import { StreamEnigmaUtils } from "./enigma";
 import { CosmJSOfflineSigner, CosmJSOfflineSignerOnlyAmino } from "./cosmjs";
 import deepmerge from "deepmerge";
 import Long from "long";
+import { StreamCoreTypes } from "./core-types";
 
 export interface ProxyRequest {
-  type: "fetchai:proxy-request-v1";
+  type: "proxy-request";
   id: string;
-  method: keyof Keplr;
+  method: keyof (Stream & StreamCoreTypes);
   args: any[];
 }
 
 export interface ProxyRequestResponse {
-  type: "fetchai:proxy-request-response-v1";
+  type: "proxy-request-response";
   id: string;
   result: Result | undefined;
 }
 
+function defineUnwritablePropertyIfPossible(o: any, p: string, value: any) {
+  const descriptor = Object.getOwnPropertyDescriptor(o, p);
+  if (!descriptor || descriptor.writable) {
+    if (!descriptor || descriptor.configurable) {
+      Object.defineProperty(o, p, {
+        value,
+        writable: false,
+      });
+    } else {
+      o[p] = value;
+    }
+  } else {
+    console.warn(
+      `Failed to inject ${p} from stream-wallet. Probably, other wallet is trying to intercept Stream`
+    );
+  }
+}
+
+export function injectStreamToWindow(stream-wallet: IStream): void {
+  defineUnwritablePropertyIfPossible(window, "stream-wallet", stream-wallet);
+  defineUnwritablePropertyIfPossible(
+    window,
+    "getOfflineSigner",
+    stream-wallet.getOfflineSigner
+  );
+  defineUnwritablePropertyIfPossible(
+    window,
+    "getOfflineSignerOnlyAmino",
+    stream-wallet.getOfflineSignerOnlyAmino
+  );
+  defineUnwritablePropertyIfPossible(
+    window,
+    "getOfflineSignerAuto",
+    stream-wallet.getOfflineSignerAuto
+  );
+  defineUnwritablePropertyIfPossible(
+    window,
+    "getEnigmaUtils",
+    stream-wallet.getEnigmaUtils
+  );
+}
+
 /**
- * InjectedKeplr would be injected to the webpage.
+ * InjectedStream would be injected to the webpage.
  * In the webpage, it can't request any messages to the extension because it doesn't have any API related to the extension.
  * So, to request some methods of the extension, this will proxy the request to the content script that is injected to webpage on the extension level.
  * This will use `window.postMessage` to interact with the content script.
  */
-export class InjectedKeplr implements IKeplr {
+export class InjectedStream implements IStream, StreamCoreTypes {
   static startProxy(
-    keplr: IKeplr,
+    stream-wallet: IStream & StreamCoreTypes,
     eventListener: {
       addMessageListener: (fn: (e: any) => void) => void;
       postMessage: (message: any) => void;
@@ -62,7 +103,7 @@ export class InjectedKeplr implements IKeplr {
       const message: ProxyRequest = parseMessage
         ? parseMessage(e.data)
         : e.data;
-      if (!message || message.type !== "fetchai:proxy-request-v1") {
+      if (!message || message.type !== "proxy-request") {
         return;
       }
 
@@ -84,8 +125,8 @@ export class InjectedKeplr implements IKeplr {
         }
 
         if (
-          !keplr[message.method] ||
-          typeof keplr[message.method] !== "function"
+          !stream-wallet[message.method] ||
+          typeof stream-wallet[message.method] !== "function"
         ) {
           throw new Error(`Invalid method: ${message.method}`);
         }
@@ -118,7 +159,7 @@ export class InjectedKeplr implements IKeplr {
                   accountNumber?: string | null;
                 } = message.args[2];
 
-                const result = await keplr.signDirect(
+                const result = await stream-wallet.signDirect(
                   message.args[0],
                   message.args[1],
                   {
@@ -142,14 +183,14 @@ export class InjectedKeplr implements IKeplr {
                   signature: result.signature,
                 };
               })()
-            : await keplr[message.method](
+            : await stream-wallet[message.method](
                 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                 // @ts-ignore
                 ...JSONUint8Array.unwrap(message.args)
               );
 
         const proxyResponse: ProxyRequestResponse = {
-          type: "fetchai:proxy-request-response-v1",
+          type: "proxy-request-response",
           id: message.id,
           result: {
             return: JSONUint8Array.wrap(result),
@@ -159,7 +200,7 @@ export class InjectedKeplr implements IKeplr {
         eventListener.postMessage(proxyResponse);
       } catch (e) {
         const proxyResponse: ProxyRequestResponse = {
-          type: "fetchai:proxy-request-response-v1",
+          type: "proxy-request-response",
           id: message.id,
           result: {
             error: e.message || e.toString(),
@@ -171,7 +212,10 @@ export class InjectedKeplr implements IKeplr {
     });
   }
 
-  protected requestMethod(method: keyof IKeplr, args: any[]): Promise<any> {
+  protected requestMethod(
+    method: keyof (IStream & StreamCoreTypes),
+    args: any[]
+  ): Promise<any> {
     const bytes = new Uint8Array(8);
     const id: string = Array.from(crypto.getRandomValues(bytes))
       .map((value) => {
@@ -180,7 +224,7 @@ export class InjectedKeplr implements IKeplr {
       .join("");
 
     const proxyMessage: ProxyRequest = {
-      type: "fetchai:proxy-request-v1",
+      type: "proxy-request",
       id,
       method,
       args: JSONUint8Array.wrap(args),
@@ -192,10 +236,7 @@ export class InjectedKeplr implements IKeplr {
           ? this.parseMessage(e.data)
           : e.data;
 
-        if (
-          !proxyResponse ||
-          proxyResponse.type !== "fetchai:proxy-request-response-v1"
-        ) {
+        if (!proxyResponse || proxyResponse.type !== "proxy-request-response") {
           return;
         }
 
@@ -228,11 +269,11 @@ export class InjectedKeplr implements IKeplr {
 
   protected enigmaUtils: Map<string, SecretUtils> = new Map();
 
-  public defaultOptions: KeplrIntereactionOptions = {};
+  public defaultOptions: StreamIntereactionOptions = {};
 
   constructor(
     public readonly version: string,
-    public readonly mode: KeplrMode,
+    public readonly mode: StreamMode,
     protected readonly eventListener: {
       addMessageListener: (fn: (e: any) => void) => void;
       removeMessageListener: (fn: (e: any) => void) => void;
@@ -246,13 +287,59 @@ export class InjectedKeplr implements IKeplr {
         window.postMessage(message, window.location.origin),
     },
     protected readonly parseMessage?: (message: any) => any
-  ) {}
+  ) {
+    // Freeze fields/method except for "defaultOptions"
+    // Intentionally, "defaultOptions" can be mutated to allow a webpage to change the options with cosmjs usage.
+    // Freeze fields
+    const fieldNames = Object.keys(this);
+    for (const fieldName of fieldNames) {
+      if (fieldName !== "defaultOptions") {
+        Object.defineProperty(this, fieldName, {
+          value: (this as any)[fieldName],
+          writable: false,
+        });
+      }
+
+      // If field is "eventListener", try to iterate one-level deep.
+      if (fieldName === "eventListener") {
+        const fieldNames = Object.keys(this.eventListener);
+        for (const fieldName of fieldNames) {
+          Object.defineProperty(this.eventListener, fieldName, {
+            value: (this.eventListener as any)[fieldName],
+            writable: false,
+          });
+        }
+      }
+    }
+    // Freeze methods
+    const methodNames = Object.getOwnPropertyNames(InjectedStream.prototype);
+    for (const methodName of methodNames) {
+      if (
+        methodName !== "constructor" &&
+        typeof (this as any)[methodName] === "function"
+      ) {
+        Object.defineProperty(this, methodName, {
+          value: (this as any)[methodName].bind(this),
+          writable: false,
+        });
+      }
+    }
+  }
 
   async enable(chainIds: string | string[]): Promise<void> {
     await this.requestMethod("enable", [chainIds]);
   }
 
   async experimentalSuggestChain(chainInfo: ChainInfo): Promise<void> {
+    if (
+      chainInfo.features?.includes("stargate") ||
+      chainInfo.features?.includes("no-legacy-stdTx")
+    ) {
+      console.warn(
+        "“stargate”, “no-legacy-stdTx” feature has been deprecated. The launchpad is no longer supported, thus works without the two features. We would keep the aforementioned two feature for a while, but the upcoming update would potentially cause errors. Remove the two feature."
+      );
+    }
+
     await this.requestMethod("experimentalSuggestChain", [chainInfo]);
   }
 
@@ -265,6 +352,12 @@ export class InjectedKeplr implements IKeplr {
     tx: StdTx | Uint8Array,
     mode: BroadcastMode
   ): Promise<Uint8Array> {
+    if (!("length" in tx)) {
+      console.warn(
+        "Do not send legacy std tx via `sendTx` API. We now only support protobuf tx. The usage of legeacy std tx would throw an error in the near future."
+      );
+    }
+
     return await this.requestMethod("sendTx", [chainId, tx, mode]);
   }
 
@@ -272,7 +365,7 @@ export class InjectedKeplr implements IKeplr {
     chainId: string,
     signer: string,
     signDoc: StdSignDoc,
-    signOptions: KeplrSignOptions = {}
+    signOptions: StreamSignOptions = {}
   ): Promise<AminoSignResponse> {
     return await this.requestMethod("signAmino", [
       chainId,
@@ -291,7 +384,7 @@ export class InjectedKeplr implements IKeplr {
       chainId?: string | null;
       accountNumber?: Long | null;
     },
-    signOptions: KeplrSignOptions = {}
+    signOptions: StreamSignOptions = {}
   ): Promise<DirectSignResponse> {
     const result = await this.requestMethod("signDirect", [
       chainId,
@@ -351,17 +444,31 @@ export class InjectedKeplr implements IKeplr {
     ]);
   }
 
-  getOfflineSigner(chainId: string): OfflineSigner & OfflineDirectSigner {
+  async signEthereum(
+    chainId: string,
+    signer: string,
+    data: string | Uint8Array,
+    type: EthSignType
+  ): Promise<Uint8Array> {
+    return await this.requestMethod("signEthereum", [
+      chainId,
+      signer,
+      data,
+      type,
+    ]);
+  }
+
+  getOfflineSigner(chainId: string): OfflineAminoSigner & OfflineDirectSigner {
     return new CosmJSOfflineSigner(chainId, this);
   }
 
-  getOfflineSignerOnlyAmino(chainId: string): OfflineSigner {
+  getOfflineSignerOnlyAmino(chainId: string): OfflineAminoSigner {
     return new CosmJSOfflineSignerOnlyAmino(chainId, this);
   }
 
   async getOfflineSignerAuto(
     chainId: string
-  ): Promise<OfflineSigner | OfflineDirectSigner> {
+  ): Promise<OfflineAminoSigner | OfflineDirectSigner> {
     const key = await this.getKey(chainId);
     if (key.isNanoLedger) {
       return new CosmJSOfflineSignerOnlyAmino(chainId, this);
@@ -436,8 +543,32 @@ export class InjectedKeplr implements IKeplr {
       return this.enigmaUtils.get(chainId)!;
     }
 
-    const enigmaUtils = new KeplrEnigmaUtils(chainId, this);
+    const enigmaUtils = new StreamEnigmaUtils(chainId, this);
     this.enigmaUtils.set(chainId, enigmaUtils);
     return enigmaUtils;
+  }
+
+  async experimentalSignEIP712CosmosTx_v0(
+    chainId: string,
+    signer: string,
+    eip712: {
+      types: Record<string, { name: string; type: string }[] | undefined>;
+      domain: Record<string, any>;
+      primaryType: string;
+    },
+    signDoc: StdSignDoc,
+    signOptions: StreamSignOptions = {}
+  ): Promise<AminoSignResponse> {
+    return await this.requestMethod("experimentalSignEIP712CosmosTx_v0", [
+      chainId,
+      signer,
+      eip712,
+      signDoc,
+      deepmerge(this.defaultOptions.sign ?? {}, signOptions),
+    ]);
+  }
+
+  __core__getAnalyticsId(): Promise<string> {
+    return this.requestMethod("__core__getAnalyticsId", []);
   }
 }

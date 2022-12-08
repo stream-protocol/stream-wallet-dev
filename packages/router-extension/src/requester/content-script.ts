@@ -2,8 +2,8 @@ import {
   MessageRequester,
   Message,
   JSONUint8Array,
-} from "@keplr-wallet/router";
-import { getKeplrExtensionRouterId } from "../utils";
+} from "@stream-wallet/router";
+import { getStreamExtensionRouterId } from "../utils";
 
 // The message requester to send the message to the content scripts.
 // This will send message to the tab with the content script.
@@ -22,7 +22,7 @@ export class ContentScriptMessageRequester implements MessageRequester {
     msg["origin"] = window.location.origin;
     msg.routerMeta = {
       ...msg.routerMeta,
-      routerId: getKeplrExtensionRouterId(),
+      routerId: getStreamExtensionRouterId(),
     };
 
     const wrappedMsg = JSONUint8Array.wrap(msg);

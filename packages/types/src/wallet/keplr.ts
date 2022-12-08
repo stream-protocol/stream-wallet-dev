@@ -1,13 +1,14 @@
 import { ChainInfo } from "../chain-info";
+import { EthSignType } from "../ethereum";
 import {
   BroadcastMode,
   AminoSignResponse,
   StdSignDoc,
-  StdTx,
-  OfflineSigner,
+  OfflineAminoSigner,
   StdSignature,
-} from "@cosmjs/launchpad";
-import { DirectSignResponse, OfflineDirectSigner } from "@cosmjs/proto-signing";
+  DirectSignResponse,
+  OfflineDirectSigner,
+} from "../cosmjs";
 import { SecretUtils } from "secretjs/types/enigmautils";
 import Long from "long";
 
@@ -24,28 +25,28 @@ export interface Key {
   readonly isNanoLedger: boolean;
 }
 
-export type KeplrMode = "core" | "extension" | "mobile-web" | "walletconnect";
+export type StreamMode = "core" | "extension" | "mobile-web" | "walletconnect";
 
-export interface KeplrIntereactionOptions {
-  readonly sign?: KeplrSignOptions;
+export interface StreamIntereactionOptions {
+  readonly sign?: StreamSignOptions;
 }
 
-export interface KeplrSignOptions {
+export interface StreamSignOptions {
   readonly preferNoSetFee?: boolean;
   readonly preferNoSetMemo?: boolean;
 
   readonly disableBalanceCheck?: boolean;
 }
 
-export interface Keplr {
+export interface Stream {
   readonly version: string;
   /**
-   * mode means that how Keplr is connected.
-   * If the connected Keplr is browser's extension, the mode should be "extension".
-   * If the connected Keplr is on the mobile app with the embeded web browser, the mode should be "mobile-web".
+   * mode means that how Stream is connected.
+   * If the connected Stream is browser's extension, the mode should be "extension".
+   * If the connected Stream is on the mobile app with the embeded web browser, the mode should be "mobile-web".
    */
-  readonly mode: KeplrMode;
-  defaultOptions: KeplrIntereactionOptions;
+  readonly mode: StreamMode;
+  defaultOptions: StreamIntereactionOptions;
 
   experimentalSuggestChain(chainInfo: ChainInfo): Promise<void>;
   enable(chainIds: string | string[]): Promise<void>;
@@ -54,7 +55,7 @@ export interface Keplr {
     chainId: string,
     signer: string,
     signDoc: StdSignDoc,
-    signOptions?: KeplrSignOptions
+    signOptions?: StreamSignOptions
   ): Promise<AminoSignResponse>;
   signDirect(
     chainId: string,
@@ -72,15 +73,11 @@ export interface Keplr {
       /** SignDoc accountNumber */
       accountNumber?: Long | null;
     },
-    signOptions?: KeplrSignOptions
+    signOptions?: StreamSignOptions
   ): Promise<DirectSignResponse>;
   sendTx(
     chainId: string,
-    /*
-     If the type is `StdTx`, it is considered as legacy stdTx.
-     If the type is `Uint8Array`, it is considered as proto tx.
-     */
-    tx: StdTx | Uint8Array,
+    tx: Uint8Array,
     mode: BroadcastMode
   ): Promise<Uint8Array>;
 
@@ -96,11 +93,18 @@ export interface Keplr {
     signature: StdSignature
   ): Promise<boolean>;
 
-  getOfflineSigner(chainId: string): OfflineSigner & OfflineDirectSigner;
-  getOfflineSignerOnlyAmino(chainId: string): OfflineSigner;
+  signEthereum(
+    chainId: string,
+    signer: string,
+    data: string | Uint8Array,
+    type: EthSignType
+  ): Promise<Uint8Array>;
+
+  getOfflineSigner(chainId: string): OfflineAminoSigner & OfflineDirectSigner;
+  getOfflineSignerOnlyAmino(chainId: string): OfflineAminoSigner;
   getOfflineSignerAuto(
     chainId: string
-  ): Promise<OfflineSigner | OfflineDirectSigner>;
+  ): Promise<OfflineAminoSigner | OfflineDirectSigner>;
 
   suggestToken(
     chainId: string,
@@ -131,4 +135,29 @@ export interface Keplr {
     ciphertext: Uint8Array,
     nonce: Uint8Array
   ): Promise<Uint8Array>;
+
+  /**
+   * Sign the sign doc with ethermint's EIP-712 format.
+   * The difference from signEthereum(..., EthSignType.EIP712) is that this api returns a new sign doc changed by the user's fee setting and the signature for that sign doc.
+   * Encoding tx to EIP-712 format should be done on the side using this api.
+   * Not compatible with cosmjs.
+   * The returned signature is (r | s | v) format which used in ethereum.
+   * v should be 27 or 28 which is used in the ethereum mainnet regardless of chain.
+   * @param chainId
+   * @param signer
+   * @param eip712
+   * @param signDoc
+   * @param signOptions
+   */
+  experimentalSignEIP712CosmosTx_v0(
+    chainId: string,
+    signer: string,
+    eip712: {
+      types: Record<string, { name: string; type: string }[] | undefined>;
+      domain: Record<string, any>;
+      primaryType: string;
+    },
+    signDoc: StdSignDoc,
+    signOptions?: StreamSignOptions
+  ): Promise<AminoSignResponse>;
 }

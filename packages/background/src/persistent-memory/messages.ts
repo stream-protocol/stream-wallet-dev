@@ -1,4 +1,4 @@
-import { Message } from "@keplr-wallet/router";
+import { Message } from "@stream-wallet/router";
 import { ROUTE } from "./constants";
 
 export class SetPersistentMemoryMsg extends Message<{ success: boolean }> {

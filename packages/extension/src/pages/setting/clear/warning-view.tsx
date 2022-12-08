@@ -5,7 +5,7 @@ import { Alert, Button } from "reactstrap";
 import { useHistory } from "react-router";
 import { FormattedMessage } from "react-intl";
 
-import { MultiKeyStoreInfoWithSelectedElem } from "@keplr-wallet/background";
+import { MultiKeyStoreInfoWithSelectedElem } from "@stream-wallet/background";
 
 export const WarningView: FunctionComponent<{
   index: number;

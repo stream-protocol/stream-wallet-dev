@@ -1,9 +1,9 @@
-import { KVStore, toGenerator } from "@keplr-wallet/common";
+import { KVStore, toGenerator } from "@stream-wallet/common";
 import { flow, makeObservable, observable, runInAction } from "mobx";
 import { computedFn } from "mobx-utils";
 import { Channel } from "./types";
 import { HasMapStore } from "../common";
-import { ChainIdHelper } from "@keplr-wallet/cosmos";
+import { ChainIdHelper } from "@stream-wallet/cosmos";
 
 export class IBCChannelStoreInner {
   // channelMap[portId][channelId]

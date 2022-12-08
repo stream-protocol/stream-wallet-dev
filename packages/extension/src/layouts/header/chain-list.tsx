@@ -1,22 +1,19 @@
-import { ChainInfoWithEmbed } from "@keplr-wallet/background";
-import classnames from "classnames";
-import { observer } from "mobx-react-lite";
 import React, { FunctionComponent } from "react";
-import { useIntl } from "react-intl";
-import { useHistory } from "react-router";
-import { store } from "../../chatStore";
-import { resetChatList } from "../../chatStore/messages-slice";
-import { resetUser } from "../../chatStore/user-slice";
-import { useConfirm } from "../../components/confirm";
-import { messageListenerUnsubscribe } from "../../graphQL/messages-api";
+import classnames from "classnames";
+
+import { observer } from "mobx-react-lite";
 import { useStore } from "../../stores";
+
 import style from "./chain-list.module.scss";
+import { ChainInfoWithCoreTypes } from "@stream-wallet/background";
+import { useConfirm } from "../../components/confirm";
+import { useIntl } from "react-intl";
 
 const ChainElement: FunctionComponent<{
-  chainInfo: ChainInfoWithEmbed;
+  chainInfo: ChainInfoWithCoreTypes;
 }> = observer(({ chainInfo }) => {
-  const { chainStore, analyticsStore } = useStore();
-  const history = useHistory();
+  const { chainStore } = useStore();
+
   const intl = useIntl();
 
   const confirm = useConfirm();
@@ -29,18 +26,8 @@ const ChainElement: FunctionComponent<{
       })}
       onClick={() => {
         if (chainInfo.chainId !== chainStore.current.chainId) {
-          analyticsStore.logEvent("Chain changed", {
-            chainId: chainStore.current.chainId,
-            chainName: chainStore.current.chainName,
-            toChainId: chainInfo.chainId,
-            toChainName: chainInfo.chainName,
-          });
           chainStore.selectChain(chainInfo.chainId);
           chainStore.saveLastViewChainId();
-          store.dispatch(resetUser({}));
-          store.dispatch(resetChatList({}));
-          messageListenerUnsubscribe();
-          history.push("/");
         }
       }}
     >

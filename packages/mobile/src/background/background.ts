@@ -1,4 +1,4 @@
-import { init, ScryptParams } from "@keplr-wallet/background";
+import { init, ScryptParams } from "@stream-wallet/background";
 import {
   RNEnv,
   RNMessageRequesterInternalToUI,
@@ -9,9 +9,9 @@ import scrypt from "react-native-scrypt";
 import { Buffer } from "buffer/";
 import TransportBLE from "@ledgerhq/react-native-hw-transport-ble";
 import { getRandomBytesAsync } from "../common";
-import { BACKGROUND_PORT } from "@keplr-wallet/router";
+import { BACKGROUND_PORT } from "@stream-wallet/router";
 
-import { EmbedChainInfos } from "../config";
+import { CommunityChainInfoRepo, EmbedChainInfos } from "../config";
 import {
   getLastUsedLedgerDeviceId,
   setLastUsedLedgerDeviceId,
@@ -24,9 +24,17 @@ init(
   (prefix: string) => new AsyncKVStore(prefix),
   new RNMessageRequesterInternalToUI(),
   EmbedChainInfos,
-  ["https://app.osmosis.zone"],
-  getRandomBytesAsync,
+  [
+    "https://app.osmosis.zone",
+    "https://www.stargaze.zone",
+    "https://app.umee.cc",
+    "https://junoswap.com",
+    "https://frontier.osmosis.zone",
+  ],
+  ["https://wallet.streamprotocol.app"],
+  CommunityChainInfoRepo,
   {
+    rng: getRandomBytesAsync,
     scrypt: async (text: string, params: ScryptParams) => {
       return Buffer.from(
         await scrypt(
@@ -72,6 +80,11 @@ init(
 
         return await TransportBLE.open(deviceId);
       },
+    },
+  },
+  {
+    suggestChain: {
+      useMemoryKVStore: true,
     },
   }
 );

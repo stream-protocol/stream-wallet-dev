@@ -1,11 +1,6 @@
-import { RNInjectedKeplr } from "./injected-provider";
-import { init } from "./init";
+import { RNInjectedStream } from "./injected-provider";
+import { injectStreamToWindow } from "@stream-wallet/provider";
 
-// TODO: Set the Keplr version properly
-const keplr = new RNInjectedKeplr("0.9.6", "mobile-web");
-
-init(
-  keplr,
-  (chainId: string) => keplr.getOfflineSigner(chainId),
-  (chainId: string) => keplr.getEnigmaUtils(chainId)
-);
+// TODO: Set the Stream version properly
+const stream-wallet = new RNInjectedStream("0.10.10", "mobile-web");
+injectStreamToWindow(stream-wallet);

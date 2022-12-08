@@ -21,12 +21,16 @@ export const SettingSelectAccountItem: FunctionComponent = observer(() => {
   return (
     <React.Fragment>
       <View
-        style={style.flatten(["height-1", "background-color-border-white"])}
+        style={style.flatten([
+          "height-1",
+          "background-color-gray-50",
+          "dark:background-color-platinum-500@75%",
+        ])}
       />
       <KeyStoreItem
         containerStyle={style.flatten(["padding-left-10"])}
         defaultRightWalletIconStyle={style.flatten(["margin-right-2"])}
-        label={selected ? selected.meta?.name || "Keplr Account" : "No Account"}
+        label={selected ? selected.meta?.name || "Stream Account" : "No Account"}
         paragraph={selected ? getKeyStoreParagraph(selected) : undefined}
         right={<RightArrow />}
         topBorder={false}
@@ -36,7 +40,11 @@ export const SettingSelectAccountItem: FunctionComponent = observer(() => {
         }}
       />
       <View
-        style={style.flatten(["height-1", "background-color-border-white"])}
+        style={style.flatten([
+          "height-1",
+          "background-color-gray-50",
+          "dark:background-color-platinum-500@75%",
+        ])}
       />
     </React.Fragment>
   );

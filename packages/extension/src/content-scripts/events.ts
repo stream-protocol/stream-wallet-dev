@@ -1,4 +1,4 @@
-import { Message, Router } from "@keplr-wallet/router";
+import { Message, Router } from "@stream-wallet/router";
 
 class PushEventDataMsg extends Message<void> {
   public static type() {
@@ -36,7 +36,7 @@ export function initEvents(router: Router) {
     switch (msg.constructor) {
       case PushEventDataMsg:
         if ((msg as PushEventDataMsg).data.type === "keystore-changed") {
-          window.dispatchEvent(new Event("keplr_keystorechange"));
+          window.dispatchEvent(new Event("stream-wallet_keystorechange"));
         }
         return;
       default:

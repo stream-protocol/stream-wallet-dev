@@ -1,4 +1,10 @@
-import { Env, Handler, InternalHandler, Message } from "@keplr-wallet/router";
+import {
+  Env,
+  Handler,
+  InternalHandler,
+  StreamError,
+  Message,
+} from "@stream-wallet/router";
 import {
   GetPubkeyMsg,
   GetTxEncryptionKeyMsg,
@@ -24,7 +30,7 @@ export const getHandler: (service: SecretWasmService) => Handler = (
           msg as GetTxEncryptionKeyMsg
         );
       default:
-        throw new Error("Unknown msg type");
+        throw new StreamError("secret-wasm", 120, "Unknown msg type");
     }
   };
 };

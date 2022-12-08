@@ -8,29 +8,37 @@ import {
   IMemoConfig,
   InvalidBech32Error,
   IRecipientConfig,
-} from "@keplr-wallet/hooks";
+} from "@stream-wallet/hooks";
 import { TextStyle, View, ViewStyle } from "react-native";
 import { TextInput } from "./input";
-import { ObservableEnsFetcher } from "@keplr-wallet/ens";
+import { ObservableEnsFetcher } from "@stream-wallet/ens";
 import { LoadingSpinner } from "../spinner";
 import { useStyle } from "../../styles";
 import { AddressBookIcon } from "../icon";
 import { TouchableOpacity } from "react-native-gesture-handler";
 import { useSmartNavigation } from "../../navigation";
 
-export const AddressInput: FunctionComponent<{
-  labelStyle?: TextStyle;
-  containerStyle?: ViewStyle;
-  inputContainerStyle?: ViewStyle;
-  errorLabelStyle?: TextStyle;
+export const AddressInput: FunctionComponent<
+  {
+    labelStyle?: TextStyle;
+    containerStyle?: ViewStyle;
+    inputContainerStyle?: ViewStyle;
+    errorLabelStyle?: TextStyle;
 
-  label: string;
+    label: string;
 
-  recipientConfig: IRecipientConfig;
-  memoConfig: IMemoConfig;
-
-  disableAddressBook?: boolean;
-}> = observer(
+    recipientConfig: IRecipientConfig;
+  } & (
+    | {
+        memoConfig?: IMemoConfig;
+        disableAddressBook: true;
+      }
+    | {
+        memoConfig: IMemoConfig;
+        disableAddressBook?: false;
+      }
+  )
+> = observer(
   ({
     labelStyle,
     containerStyle,
@@ -49,7 +57,7 @@ export const AddressInput: FunctionComponent<{
       recipientConfig.rawRecipient
     );
 
-    const error = recipientConfig.getError();
+    const error = recipientConfig.error;
     const errorText: string | undefined = useMemo(() => {
       if (error) {
         switch (error.constructor) {
@@ -99,7 +107,10 @@ export const AddressInput: FunctionComponent<{
                 >
                   <LoadingSpinner
                     size={14}
-                    color={style.get("color-loading-spinner").color}
+                    color={
+                      style.flatten(["color-blue-400", "dark:color-blue-300"])
+                        .color
+                    }
                   />
                 </View>
               </View>
@@ -127,7 +138,10 @@ export const AddressInput: FunctionComponent<{
                 }}
               >
                 <AddressBookIcon
-                  color={style.get("color-primary").color}
+                  color={
+                    style.flatten(["color-blue-400", "dark:color-blue-100"])
+                      .color
+                  }
                   height={18}
                 />
               </TouchableOpacity>

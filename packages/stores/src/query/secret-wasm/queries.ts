@@ -1,41 +1,45 @@
 import { QueriesSetBase } from "../queries";
 import { ChainGetter } from "../../common";
-import { KVStore } from "@keplr-wallet/common";
+import { KVStore } from "@stream-wallet/common";
 import { ObservableQuerySecretContractCodeHash } from "./contract-hash";
 import { ObservableQuerySecret20ContractInfo } from "./secret20-contract-info";
 import { DeepReadonly } from "utility-types";
 import { ObservableQuerySecret20BalanceRegistry } from "./secret20-balance";
-import { QueriesWithCosmos } from "../cosmos";
-import { Keplr } from "@keplr-wallet/types";
+import { Stream } from "@stream-wallet/types";
 
-export interface HasSecretQueries {
-  secret: SecretQueries;
+export interface SecretQueries {
+  secret: SecretQueriesImpl;
 }
 
-export class QueriesWithCosmosAndSecret
-  extends QueriesWithCosmos
-  implements HasSecretQueries {
-  public secret: SecretQueries;
-
-  constructor(
+export const SecretQueries = {
+  use(options: {
+    apiGetter: () => Promise<Stream | undefined>;
+  }): (
+    queriesSetBase: QueriesSetBase,
     kvStore: KVStore,
     chainId: string,
-    chainGetter: ChainGetter,
-    apiGetter: () => Promise<Keplr | undefined>
-  ) {
-    super(kvStore, chainId, chainGetter);
+    chainGetter: ChainGetter
+  ) => SecretQueries {
+    return (
+      queriesSetBase: QueriesSetBase,
+      kvStore: KVStore,
+      chainId: string,
+      chainGetter: ChainGetter
+    ) => {
+      return {
+        secret: new SecretQueriesImpl(
+          queriesSetBase,
+          kvStore,
+          chainId,
+          chainGetter,
+          options.apiGetter
+        ),
+      };
+    };
+  },
+};
 
-    this.secret = new SecretQueries(
-      this,
-      kvStore,
-      chainId,
-      chainGetter,
-      apiGetter
-    );
-  }
-}
-
-export class SecretQueries {
+export class SecretQueriesImpl {
   public readonly querySecretContractCodeHash: DeepReadonly<ObservableQuerySecretContractCodeHash>;
   public readonly querySecret20ContractInfo: DeepReadonly<ObservableQuerySecret20ContractInfo>;
 
@@ -44,7 +48,7 @@ export class SecretQueries {
     kvStore: KVStore,
     chainId: string,
     chainGetter: ChainGetter,
-    apiGetter: () => Promise<Keplr | undefined>
+    apiGetter: () => Promise<Stream | undefined>
   ) {
     this.querySecretContractCodeHash = new ObservableQuerySecretContractCodeHash(
       kvStore,

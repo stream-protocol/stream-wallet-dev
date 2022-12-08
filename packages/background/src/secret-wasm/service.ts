@@ -1,19 +1,14 @@
-import { delay, inject, singleton } from "tsyringe";
-import { TYPES } from "../types";
-
 import { EnigmaUtils } from "secretjs";
 import { KeyRingService } from "../keyring";
 import { ChainsService } from "../chains";
 import { PermissionService } from "../permission";
-import { Hash } from "@keplr-wallet/crypto";
-import { KVStore, Debouncer } from "@keplr-wallet/common";
-import { ChainInfo } from "@keplr-wallet/types";
-import { Bech32Address } from "@keplr-wallet/cosmos";
-import { Env } from "@keplr-wallet/router";
-
+import { Hash } from "@stream-wallet/crypto";
+import { KVStore, Debouncer } from "@stream-wallet/common";
+import { ChainInfo } from "@stream-wallet/types";
+import { Bech32Address } from "@stream-wallet/cosmos";
+import { Env, StreamError } from "@stream-wallet/router";
 import { Buffer } from "buffer/";
 
-@singleton()
 export class SecretWasmService {
   protected debouncerMap: Map<
     string,
@@ -26,16 +21,21 @@ export class SecretWasmService {
 
   protected cacheEnigmaUtils: Map<string, EnigmaUtils> = new Map();
 
-  constructor(
-    @inject(TYPES.SecretWasmStore)
-    protected readonly kvStore: KVStore,
-    @inject(ChainsService)
-    protected readonly chainsService: ChainsService,
-    @inject(delay(() => KeyRingService))
-    protected readonly keyRingService: KeyRingService,
-    @inject(delay(() => PermissionService))
-    public readonly permissionService: PermissionService
+  protected chainsService!: ChainsService;
+  protected keyRingService!: KeyRingService;
+  public permissionService!: PermissionService;
+
+  constructor(protected readonly kvStore: KVStore) {}
+
+  init(
+    chainsService: ChainsService,
+    keyRingService: KeyRingService,
+    permissionService: PermissionService
   ) {
+    this.chainsService = chainsService;
+    this.keyRingService = keyRingService;
+    this.permissionService = permissionService;
+
     this.chainsService.addChainRemovedHandler(this.onChainRemoved);
   }
 
@@ -48,7 +48,7 @@ export class SecretWasmService {
 
     const keyRingType = await this.keyRingService.getKeyRingType();
     if (keyRingType === "none") {
-      throw new Error("Key ring is not initialized");
+      throw new StreamError("secret-wasm", 130, "Key ring is not initialized");
     }
 
     const seed = await this.getSeed(env, chainInfo);
@@ -66,7 +66,7 @@ export class SecretWasmService {
 
     const keyRingType = await this.keyRingService.getKeyRingType();
     if (keyRingType === "none") {
-      throw new Error("Key ring is not initialized");
+      throw new StreamError("secret-wasm", 130, "Key ring is not initialized");
     }
 
     const seed = await this.getSeed(env, chainInfo);
@@ -86,11 +86,11 @@ export class SecretWasmService {
 
     const keyRingType = await this.keyRingService.getKeyRingType();
     if (keyRingType === "none") {
-      throw new Error("Key ring is not initialized");
+      throw new StreamError("secret-wasm", 130, "Key ring is not initialized");
     }
 
-    // XXX: Keplr should generate the seed deterministically according to the account.
-    // Otherwise, it will lost the encryption/decryption key if Keplr is uninstalled or local storage is cleared.
+    // XXX: Stream should generate the seed deterministically according to the account.
+    // Otherwise, it will lost the encryption/decryption key if Stream is uninstalled or local storage is cleared.
     // For now, use the signature of some string to generate the seed.
     // It need to more research.
     const seed = await this.getSeed(env, chainInfo);
@@ -110,11 +110,11 @@ export class SecretWasmService {
 
     const keyRingType = await this.keyRingService.getKeyRingType();
     if (keyRingType === "none") {
-      throw new Error("Key ring is not initialized");
+      throw new StreamError("secret-wasm", 130, "Key ring is not initialized");
     }
 
-    // XXX: Keplr should generate the seed deterministically according to the account.
-    // Otherwise, it will lost the encryption/decryption key if Keplr is uninstalled or local storage is cleared.
+    // XXX: Stream should generate the seed deterministically according to the account.
+    // Otherwise, it will lost the encryption/decryption key if Stream is uninstalled or local storage is cleared.
     // For now, use the signature of some string to generate the seed.
     // It need to more research.
     const seed = await this.getSeed(env, chainInfo);
@@ -186,7 +186,7 @@ export class SecretWasmService {
               chain_id: chainInfo.chainId,
               fee: [],
               memo:
-                "Create Keplr Secret encryption key. Only approve requests by Keplr.",
+                "Create Stream Secret encryption key. Only approve requests by Stream.",
               msgs: [],
               sequence: 0,
             })

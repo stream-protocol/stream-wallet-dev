@@ -1,4 +1,4 @@
-import { Router } from "@keplr-wallet/router";
+import { Router } from "@stream-wallet/router";
 import { PushInteractionDataMsg, PushEventDataMsg } from "./messages";
 import { ROUTE } from "./constants";
 import { getHandler } from "./handler";

@@ -1,7 +1,7 @@
 import { flow, makeObservable, observable } from "mobx";
 import * as Keychain from "react-native-keychain";
-import { KVStore, toGenerator } from "@keplr-wallet/common";
-import { KeyRingStore } from "@keplr-wallet/stores";
+import { KVStore, toGenerator } from "@stream-wallet/common";
+import { KeyRingStore } from "@stream-wallet/stores";
 
 export class KeychainStore {
   @observable
@@ -57,7 +57,7 @@ export class KeychainStore {
     if (valid) {
       const result = yield* toGenerator(
         Keychain.setGenericPassword(
-          "keplr",
+          "stream-wallet",
           password,
           KeychainStore.defaultOptions
         )

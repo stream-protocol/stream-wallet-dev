@@ -3,8 +3,9 @@ import {
   MessageSender,
   Result,
   EnvProducer,
-} from "@keplr-wallet/router";
-import { getKeplrExtensionRouterId } from "../utils";
+  StreamError,
+} from "@stream-wallet/router";
+import { getStreamExtensionRouterId } from "../utils";
 
 export class ExtensionRouter extends Router {
   constructor(envProducer: EnvProducer) {
@@ -54,7 +55,7 @@ export class ExtensionRouter extends Router {
     // If this value exists, it compares this value with the current router id and processes them only if they are the same.
     if (
       message.msg?.routerMeta?.receiverRouterId &&
-      message.msg.routerMeta.receiverRouterId !== getKeplrExtensionRouterId()
+      message.msg.routerMeta.receiverRouterId !== getStreamExtensionRouterId()
     ) {
       return;
     }
@@ -75,7 +76,15 @@ export class ExtensionRouter extends Router {
       console.log(
         `Failed to process msg ${message.type}: ${e?.message || e?.toString()}`
       );
-      if (e) {
+      if (e instanceof StreamError) {
+        return Promise.resolve({
+          error: {
+            code: e.code,
+            module: e.module,
+            message: e.message || e.toString(),
+          },
+        });
+      } else if (e) {
         return Promise.resolve({
           error: e.message || e.toString(),
         });

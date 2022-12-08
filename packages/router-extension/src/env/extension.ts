@@ -3,8 +3,8 @@ import {
   FnRequestInteraction,
   MessageSender,
   APP_PORT,
-} from "@keplr-wallet/router";
-import { openPopupWindow as openPopupWindowInner } from "@keplr-wallet/popup";
+} from "@stream-wallet/router";
+import { openPopupWindow as openPopupWindowInner } from "@stream-wallet/popup";
 import { InExtensionMessageRequester } from "../requester";
 
 class PromiseQueue {
@@ -168,7 +168,7 @@ export class ExtensionEnv {
             return (
               window.location.href !== backgroundPage.location.href &&
               (routerMeta.routerId == null ||
-                routerMeta.routerId === window.keplrExtensionRouterId)
+                routerMeta.routerId === window.stream-walletExtensionRouterId)
             );
           });
         if (views.length > 0) {

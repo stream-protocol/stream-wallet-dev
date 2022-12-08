@@ -4,8 +4,8 @@ import {
   verifyADR36Amino,
   verifyADR36AminoSignDoc,
 } from "./amino";
-import { serializeSignDoc } from "@cosmjs/launchpad";
-import { PrivKeySecp256k1 } from "@keplr-wallet/crypto";
+import { serializeSignDoc } from "../signing";
+import { PrivKeySecp256k1 } from "@stream-wallet/crypto";
 import { Bech32Address } from "../bech32";
 
 describe("Test ADR-36 Amino Sign Doc", () => {
@@ -567,7 +567,7 @@ describe("Test ADR-36 Amino Sign Doc", () => {
         "osmo",
         signDoc,
         pubKey.toBytes(),
-        signature.slice().filter((b) => (Math.random() > 0.5 ? 0 : b))
+        signature.slice().map((b) => (Math.random() > 0.5 ? 0 : b))
       )
     ).toBe(false);
 

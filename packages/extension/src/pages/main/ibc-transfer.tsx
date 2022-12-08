@@ -6,7 +6,7 @@ import styleTransfer from "./ibc-transfer.module.scss";
 import classnames from "classnames";
 import { observer } from "mobx-react-lite";
 import { useStore } from "../../stores";
-import { Dec } from "@keplr-wallet/unit";
+import { Dec } from "@stream-wallet/unit";
 import { FormattedMessage } from "react-intl";
 
 export const IBCTransferView: FunctionComponent = observer(() => {
@@ -52,9 +52,7 @@ export const IBCTransferView: FunctionComponent = observer(() => {
         className={styleTransfer.button}
         color="primary"
         size="sm"
-        disabled={
-          !hasAssets || !chainStore.current.features?.includes("ibc-transfer")
-        }
+        disabled={!hasAssets}
         data-loading={accountInfo.isSendingMsg === "ibcTransfer"}
         onClick={(e) => {
           e.preventDefault();

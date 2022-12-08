@@ -6,10 +6,10 @@ import style from "./style.module.scss";
 import { useLanguage } from "../../languages";
 import { useIntl } from "react-intl";
 import { observer } from "mobx-react-lite";
-// import { useStore } from "../../stores";
+import { useStore } from "../../stores";
 
 export const SettingPage: FunctionComponent = observer(() => {
-  // const { uiConfigStore } = useStore();
+  const { uiConfigStore } = useStore();
 
   const language = useLanguage();
   const history = useHistory();
@@ -40,6 +40,8 @@ export const SettingPage: FunctionComponent = observer(() => {
           fiat: language.fiatCurrency.toUpperCase(),
         }
       );
+
+  const isDeveloperMode = uiConfigStore.isDeveloper;
 
   return (
     <HeaderLayout
@@ -101,10 +103,12 @@ export const SettingPage: FunctionComponent = observer(() => {
           )}
         />
         <PageButton
-          title={"Chat"}
+          title={intl.formatMessage({
+            id: "setting.export-to-mobile",
+          })}
           onClick={() => {
             history.push({
-              pathname: "/setting/chat",
+              pathname: "/setting/export-to-mobile",
             });
           }}
           icons={useMemo(
@@ -112,12 +116,26 @@ export const SettingPage: FunctionComponent = observer(() => {
             []
           )}
         />
-        {/* <PageButton
-          title="Show Advanced IBC Transfers"
+        <PageButton
+          title={intl.formatMessage({
+            id: "setting.autolock",
+          })}
           onClick={() => {
-            uiConfigStore.setShowAdvancedIBCTransfer(
-              !uiConfigStore.showAdvancedIBCTransfer
-            );
+            history.push({
+              pathname: "/setting/autolock",
+            });
+          }}
+          icons={useMemo(
+            () => [<i key="next" className="fas fa-chevron-right" />],
+            []
+          )}
+        />
+        <PageButton
+          title={intl.formatMessage({
+            id: "setting.developer-mode",
+          })}
+          onClick={() => {
+            uiConfigStore.setDeveloperMode(!isDeveloperMode);
           }}
           icons={[
             <label
@@ -127,17 +145,32 @@ export const SettingPage: FunctionComponent = observer(() => {
             >
               <input
                 type="checkbox"
-                checked={uiConfigStore.showAdvancedIBCTransfer}
+                checked={isDeveloperMode}
                 onChange={() => {
-                  uiConfigStore.setShowAdvancedIBCTransfer(
-                    !uiConfigStore.showAdvancedIBCTransfer
-                  );
+                  uiConfigStore.setDeveloperMode(isDeveloperMode);
                 }}
               />
               <span className="custom-toggle-slider rounded-circle" />
             </label>,
           ]}
-        /> */}
+        />
+        <PageButton
+          title={intl.formatMessage({
+            id: "setting.endpoints",
+          })}
+          paragraph={intl.formatMessage({
+            id: "setting.endpoints.paragraph",
+          })}
+          onClick={() => {
+            history.push({
+              pathname: "/setting/endpoints",
+            });
+          }}
+          icons={useMemo(
+            () => [<i key="next" className="fas fa-chevron-right" />],
+            []
+          )}
+        />
         <PageButton
           title={intl.formatMessage({
             id: "setting.credit",

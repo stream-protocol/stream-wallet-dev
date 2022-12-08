@@ -8,9 +8,7 @@ import {
   AddressBookConfig,
   MemoConfig,
   RecipientConfig,
-} from "@keplr-wallet/hooks";
-import { useLocation } from "react-router";
-import { chatSectionParams, defaultParamValues } from "./index";
+} from "@stream-wallet/hooks";
 
 /**
  *
@@ -33,9 +31,7 @@ export const AddAddressModal: FunctionComponent<{
     const intl = useIntl();
 
     const [name, setName] = useState("");
-    const location = useLocation();
-    const chatSectionParams =
-      (location.state as chatSectionParams) || defaultParamValues;
+
     useEffect(() => {
       if (index >= 0) {
         const data = addressBookConfig.addressBookDatas[index];
@@ -79,15 +75,13 @@ export const AddAddressModal: FunctionComponent<{
             autoComplete="off"
             value={name}
             onChange={(e) => {
-              if (e.target.value.length < 30) setName(e.target.value);
-              else setName(e.target.value.substring(0, 30));
+              setName(e.target.value);
             }}
           />
           <AddressInput
             recipientConfig={recipientConfig}
             label={intl.formatMessage({ id: "setting.address-book.address" })}
             disableAddressBook={true}
-            value={chatSectionParams.addressInputValue}
           />
           <MemoInput
             memoConfig={memoConfig}
@@ -98,10 +92,7 @@ export const AddAddressModal: FunctionComponent<{
             type="submit"
             color="primary"
             disabled={
-              !name ||
-              name.trim() === "" ||
-              recipientConfig.getError() != null ||
-              memoConfig.getError() != null
+              !name || recipientConfig.error != null || memoConfig.error != null
             }
             onClick={async (e) => {
               e.preventDefault();

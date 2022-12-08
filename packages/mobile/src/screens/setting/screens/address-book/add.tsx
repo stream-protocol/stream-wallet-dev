@@ -6,7 +6,7 @@ import {
   AddressBookConfig,
   useMemoConfig,
   useRecipientConfig,
-} from "@keplr-wallet/hooks";
+} from "@stream-wallet/hooks";
 import { observer } from "mobx-react-lite";
 import { View } from "react-native";
 import { useStore } from "../../../../stores";
@@ -41,15 +41,15 @@ export const AddAddressBookScreen: FunctionComponent = observer(() => {
   const style = useStyle();
 
   const [name, setName] = useState("");
-  const recipientConfig = useRecipientConfig(
-    chainStore,
-    route.params.chainId,
-    EthereumEndpoint
-  );
+  const recipientConfig = useRecipientConfig(chainStore, route.params.chainId, {
+    ensEndpoint: EthereumEndpoint,
+    allowHexAddressOnEthermint: true,
+  });
   const memoConfig = useMemoConfig(chainStore, route.params.chainId);
 
   return (
     <PageWithScrollView
+      backgroundMode="tertiary"
       contentContainerStyle={style.get("flex-grow-1")}
       style={style.flatten(["padding-x-page"])}
     >
@@ -71,15 +71,13 @@ export const AddAddressBookScreen: FunctionComponent = observer(() => {
         text="Save"
         size="large"
         disabled={
-          !name ||
-          recipientConfig.getError() != null ||
-          memoConfig.getError() != null
+          !name || recipientConfig.error != null || memoConfig.error != null
         }
         onPress={async () => {
           if (
             name &&
-            recipientConfig.getError() == null &&
-            memoConfig.getError() == null
+            recipientConfig.error == null &&
+            memoConfig.error == null
           ) {
             await addressBookConfig.addAddressBook({
               name,

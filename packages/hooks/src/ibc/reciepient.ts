@@ -1,5 +1,5 @@
 import { RecipientConfig } from "../tx";
-import { ChainGetter } from "@keplr-wallet/stores";
+import { ChainGetter } from "@stream-wallet/stores";
 import { IIBCChannelConfig } from "./types";
 import { useState } from "react";
 
@@ -7,7 +7,7 @@ import { useState } from "react";
  * IBCRecipientConfig returns the recipient config for IBC transfer.
  * The recipient config's chain id should be the destination chain id for IBC.
  * But, actually, the recipient config's chain id would be set as the sending chain id if the channel not set.
- * So, you should remember that the recipient config's chain id is equalt to the sending chain id, if channel not set.
+ * So, you should remember that the recipient config's chain id is equalty to the sending chain id, if channel not set.
  */
 export class IBCRecipientConfig extends RecipientConfig {
   constructor(
@@ -29,13 +29,17 @@ export const useIBCRecipientConfig = (
   chainGetter: ChainGetter,
   chainId: string,
   channelConfig: IIBCChannelConfig,
-  ensEndpoint?: string
+  options: {
+    ensEndpoint?: string;
+    allowHexAddressOnEthermint?: boolean;
+  } = {}
 ) => {
   const [config] = useState(
     () => new IBCRecipientConfig(chainGetter, chainId, channelConfig)
   );
   config.setChain(chainId);
-  config.setENSEndpoint(ensEndpoint);
+  config.setENSEndpoint(options.ensEndpoint);
+  config.setAllowHexAddressOnEthermint(options.allowHexAddressOnEthermint);
 
   return config;
 };

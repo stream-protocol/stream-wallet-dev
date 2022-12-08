@@ -5,17 +5,17 @@ import { View } from "react-native";
 import { useStyle } from "../../../styles";
 import { Button } from "../../../components/button";
 import { useSmartNavigation } from "../../../navigation";
-import { ExportKeyRingData } from "@keplr-wallet/background";
+import { ExportKeyRingData } from "@stream-wallet/background";
 import { Controller, useForm } from "react-hook-form";
 import {
   registerExportedAddressBooks,
   registerExportedKeyRingDatas,
-} from "../../../utils/import-from-mobile";
+} from "../../../utils/import-from-extension";
 import {
   AddressBookConfigMap,
   AddressBookData,
   RegisterConfig,
-} from "@keplr-wallet/hooks";
+} from "@stream-wallet/hooks";
 import { TextInput } from "../../../components/input";
 import { observer } from "mobx-react-lite";
 import { useStore } from "../../../stores";
@@ -98,6 +98,7 @@ export const ImportFromExtensionSetPasswordScreen: FunctionComponent = observer(
 
     return (
       <PageWithScrollView
+        backgroundMode="tertiary"
         contentContainerStyle={style.get("flex-grow-1")}
         style={style.flatten(["padding-x-page"])}
       >

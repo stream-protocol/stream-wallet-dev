@@ -6,7 +6,6 @@ import classNames from "classnames";
 import style from "./tooltip.module.scss";
 
 export interface ToolTipProps {
-  children: React.ReactNode;
   tooltip: React.ReactNode;
   theme: "dark" | "bright";
   options?: PopperOptions;
@@ -14,7 +13,11 @@ export interface ToolTipProps {
   show?: boolean;
 }
 
-export class ToolTip extends React.Component<ToolTipProps> {
+interface ToolTipState {
+  show: boolean;
+}
+
+export class ToolTip extends React.Component<ToolTipProps, ToolTipState> {
   static defaultProps = {
     theme: "dark",
   };
