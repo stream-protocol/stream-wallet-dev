@@ -1,4 +1,4 @@
-# Stream Wallet
+# Stream Wallet Prototype
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Twitter: Stream Wallet](https://img.shields.io/twitter/follow/stream-wallet.svg?style=social)](https://twitter.com/stream_protocol)
 
