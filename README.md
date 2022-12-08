@@ -6,14 +6,14 @@
 
 ## Official Releases
 
-> NOTE: We do not accept native integrations to the official releases through pull requests. Please feel free to check out Stream's [suggest chain](https://docs.stream-wallet.app/api/suggest-chain.html) feature for permissionless integrations to your chain.
+> NOTE: We do not accept native integrations to the official releases through pull requests. Please feel free to check out Stream's [suggest chain](https://docs.streamprotocol.app/wallet/api/suggest-chain.html) feature for permissionless integrations to your chain.
 
 You can find the latest versions of the official managed releases on these links:
-- [Browser Extension](https://chrome.google.com/webstore/detail/stream-wallet/dmkamcknogkgcdfhhbddcghachkejeap)
-- [iOS App](https://apps.apple.com/us/app/stream-wallet/id1567851089)
-- [Android App](https://play.google.com/store/apps/details?id=app.streamprotocol.stream-wallet)
+- [Browser Extension](https://chrome.google.com/webstore/detail/stream-wallet/) (Not Developed)
+- [iOS App](https://apps.apple.com/us/app/stream-wallet/) (Not Developed)
+- [Android App](https://play.google.com/store/apps/details?id=app.streamprotocol.wallet) (Not Developed)
 
-For help using Stream Wallet, Visit our [User Support Site](https://stream-wallet.crunch.help).
+For help using Stream Wallet, Visit our [User Support Site](https://stream-wallet.crunch.help). (Not Developed)
 
 ## Building browser extension locally
 This repo requires `protoc` to be installed. Check [Install protobuf](https://grpc.io/docs/protoc-installation/) for details.  
@@ -31,7 +31,7 @@ This repo contains submodules that are not open sourced and are only available t
 Source code for mobile app is also placed in `packages/mobile`.
 
 ### Example
-Refer to the [Stream Example repository](https://github.com/stream-protocol/stream-wallet-example) for examples of how to integrate Stream signing support for your web interface/application.
+Refer to the [Stream Example repository](https://github.com/stream-protocol/stream-wallet-dev) for examples of how to integrate Stream signing support for your web interface/application.
 
 ### Disclaimer
 Usage of any other packages besides @stream-wallet/types is not recommended.
@@ -39,12 +39,12 @@ Usage of any other packages besides @stream-wallet/types is not recommended.
  - Since there are active changes being made, documentation is not being updated to the most recent version of the package as of right now. Documentations would be updated as packages get stable.
 
 ## Author
-👤 **Chainapsis**
-* Twitter: [@chainapsis](https://twitter.com/chainapsis)
-* Github: [@chainapsis](https://github.com/stream-protocol)
+👤 **Stream Protocol**
+* Twitter: [@stream_protocol](https://twitter.com/stream_protocol)
+* Github: [@stream-protocol](https://github.com/stream-protocol)
 
 ## License
 ### Browser Extension 
 Apache 2.0
 ### iOS / Android App
-Copyright (c) 2021 Chainapsis Inc. All rights reserved.
+Copyright (c) 2022 Stream Protocol. All rights reserved.
