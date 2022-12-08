@@ -1,0 +1,34 @@
+@import "../../styles/var";
+
+.container-tx-button {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-evenly;
+
+  .button {
+    flex: 1;
+    padding-right: 0.8rem !important;
+    padding-left: 0.8rem !important;
+    margin-right: $layout-margin;
+    margin-left: 0px;
+    &:last-child {
+      margin-right: 0;
+    }
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    -webkit-box-orient: vertical;
+    width: 96px;
+  }
+}
+
+.deposit-modal {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  .qrcode {
+    margin-bottom: 20px;
+  }
+}

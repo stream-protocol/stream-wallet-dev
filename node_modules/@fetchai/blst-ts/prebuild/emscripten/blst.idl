@@ -1,0 +1,134 @@
+[Prefix="blst::"]
+interface P1_Affine {
+    void P1_Affine();
+    void P1_Affine([Const] DOMString input, long len);
+    void P1_Affine([Const,Ref] P1 jacobian);
+
+    [Value] P1_Affine dup();
+    [Value] P1 to_jacobian();
+    void serialize(DOMString out);
+    void compress(DOMString out);
+    boolean on_curve();
+    boolean in_group();
+    boolean is_inf();
+    boolean is_equal([Ref] P1_Affine p);
+    long core_verify([Const,Ref] P2_Affine pk,
+        boolean hash_or_encode,
+        [Const] DOMString msg, long msg_len,
+        [Const] DOMString DST,
+        [Const] DOMString aug, long aug_len);
+};
+
+[Prefix="blst::"]
+interface P1 {
+    void P1();
+    void P1([Const] SecretKey sk);
+    void P1([Const] DOMString input, long len);
+
+    [Value] P1 dup();
+    [Value] P1_Affine to_affine();
+    void serialize(DOMString out);
+    void compress(DOMString out);
+    boolean on_curve();
+    boolean in_group();
+    boolean is_inf();
+    boolean is_equal([Const,Ref] P1 p);
+    void aggregate([Const,Ref] P1_Affine input);
+    P1 sign_with([Const,Ref] SecretKey sk);
+    P1 hash_to([Const,Ref] DOMString msg, long msg_len,
+        [Const,Ref] DOMString DST, [Const,Ref] DOMString aug, long aug_len);
+    P1 encode_to([Const] DOMString msg, long msg_len,
+    [Const] DOMString DST, [Const] DOMString aug, long aug_len);
+    P1 mult([Const] DOMString scalar);
+    P1 cneg(boolean flag);
+    P1 cneg();
+    P1 add([Ref] P1 a);
+    P1 dbl();
+};
+
+[Prefix="blst::"]
+interface P2_Affine {
+    void P2_Affine();
+    void P2_Affine([Const] DOMString input, long len);
+    void P2_Affine([Const,Ref] P2 jacobian);
+
+    [Value] P2_Affine dup();
+    [Value] P2 to_jacobian();
+    void serialize(DOMString out);
+    void compress(DOMString out);
+    boolean on_curve();
+    boolean in_group();
+    boolean is_inf();
+    boolean is_equal([Ref] P2_Affine p);
+    long core_verify([Const,Ref] P1_Affine pk,
+        boolean hash_or_encode,
+        [Const] DOMString msg, long msg_len,
+        [Const] DOMString DST,
+        [Const] DOMString aug, long aug_len);
+};
+
+[Prefix="blst::"]
+interface P2 {
+    void P2();
+    void P2([Const,Ref] SecretKey sk);
+    void P2([Const] DOMString input, long len);
+
+    [Value] P2 dup();
+    [Value] P2_Affine to_affine();
+    void serialize(DOMString out);
+    void compress(DOMString out);
+    boolean on_curve();
+    boolean in_group();
+    boolean is_inf();
+    boolean is_equal([Const,Ref] P2 p);
+    void aggregate([Const,Ref] P2_Affine input);
+    P2 sign_with([Const] DOMString scalar);
+    P2 hash_to([Const] DOMString msg, long msg_len,
+        [Const] DOMString DST, [Const] byte aug, long aug_len);
+    P2 encode_to([Const] DOMString msg, long msg_len,
+        [Const] DOMString DST, [Const] DOMString aug, long aug_len);
+    P2 mult([Const] DOMString scalar);
+    P2 neg();
+    P2 cneg(boolean flag);
+    P2 add([Ref] P2 a);
+    P2 dbl();
+};
+
+[Prefix="blst::"]
+interface SecretKey {
+    void SecretKey();
+
+    void keygen([Const] DOMString ikm, long ikm_len, [Const] DOMString info);
+    void from_bendian([Const] DOMString input);
+    void from_lendian([Const] DOMString input);
+    void to_bendian(DOMString out);
+    void to_lendian(DOMString out);
+};
+
+[Prefix="blst::"]
+interface PT {
+    void PT([Const,Ref] P1_Affine p);
+    void PT([Const,Ref] P1_Affine p, [Const,Ref] P2_Affine q);
+
+    [Value] PT dup();
+    boolean is_one();
+    boolean is_equal([Const,Ref] PT p);
+    PT sqr();
+    PT mul([Const,Ref] PT p);
+    PT final_exp();
+    boolean in_group();
+    boolean finalverify([Const,Ref] PT gt1, [Const,Ref] PT gt2);
+    [Value] PT one();
+};
+
+[Prefix="blst::"]
+interface Pairing {
+    void Pairing(boolean hash_or_encode, [Const] DOMString DST, long DST_len);
+
+    long aggregate([Const] P1_Affine pk, [Const] P2_Affine sig, [Const] DOMString msg, long msg_len, [Const] DOMString aug, long aug_len);
+    long mul_n_aggregate([Const] P1_Affine pk, [Const] P2_Affine sig, [Const] DOMString scalar, long scalar_len, [Const] DOMString msg, long msg_len, [Const,] DOMString aug, long aug_len);
+    void commit();
+    long merge([Const] Pairing ctx);
+    boolean finalverify([Const] PT sig);
+    boolean finalverify();
+};

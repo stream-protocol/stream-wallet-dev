@@ -1,0 +1,39 @@
+$border-radius: 6px;
+
+.buttons {
+  display: flex;
+  flex-direction: column;
+
+  .button {
+    flex: 1;
+
+    box-shadow: 0 1px 3px rgba(50, 50, 93, 0.15), 0 1px 0 rgba(0, 0, 0, 0.02);
+    &:not(:global(.btn-primary)) {
+      background-color: white;
+    }
+
+    &:focus {
+      z-index: unset;
+    }
+
+    &:first-child {
+      border-radius: $border-radius $border-radius 0 0 !important;
+    }
+
+    &:last-child {
+      border-radius: 0 0 $border-radius $border-radius !important;
+    }
+
+    .title {
+      font-weight: bold;
+    }
+
+    .fiat {
+      font-size: 10px;
+    }
+
+    .coin {
+      font-size: 10px;
+    }
+  }
+}
